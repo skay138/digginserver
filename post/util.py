@@ -12,8 +12,12 @@ def get_youtube_info(req):
     title = video_data['title']
     description = video_data['description']
     thumbnail = video_data['thumbnails']['standard']['url']
+    data = {"title" : title,
+            "thumb" : thumbnail,
+            "desc" : description
+    }
 
-    return title, description, thumbnail
+    return data
 
 def youtube_link_varify(req):
     if "youtube.com/watch?v=" in req:

@@ -3,7 +3,7 @@ from django.http import response
 from rest_framework.decorators import api_view
 from datetime import datetime
 
-from account.models import User
+from account.models import User, Follow
 from rest_framework import serializers
 
 # Create your views here.
@@ -11,7 +11,35 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta :
         model = User
-        fields = ['nickname','introduce','image','is_active']
+        fields = ['uid','nickname','introduce','image','is_active']
+
+class FollowerSerializer(serializers.ModelSerializer):
+    def get_nickname(self, obj):
+        return obj.follower.nickname
+
+    def get_image(self, obj):
+        return obj.follower.image
+    
+    nickname = serializers.SerializerMethodField('get_nickname')
+    image = serializers.SerializerMethodField('get_image')
+
+    class Meta :
+        model = Follow
+        fields = ['follower', 'nickname', 'image']
+
+class FolloweeSerializer(serializers.ModelSerializer):
+    def get_nickname(self, obj):
+        return obj.followee.nickname
+
+    def get_image(self, obj):
+        return obj.followee.image
+
+    nickname = serializers.SerializerMethodField('get_nickname')
+    image = serializers.SerializerMethodField('get_image')
+
+    class Meta :
+        model = Follow
+        fields = ['followee', 'nickname', 'image']
 
 @api_view(['POST', 'GET'])
 def account_view(request):
@@ -73,3 +101,18 @@ def account_detail_view(request, key):
             return response.JsonResponse({"status" : "good"})
         else:
             return response.JsonResponse({"status" : "user not found"})
+
+@api_view(['GET', 'POST', 'DELETE'])
+def follow_view(request, key):
+    if request.method == 'GET':
+        if key[0] == 'r':
+            key = key[2:]
+            follower = Follow.objects.filter(followee = key)
+            serializer = FollowerSerializer(follower, many=True)
+            return response.JsonResponse(serializer.data, safe=False)
+        elif key[0] == 'e':
+            key = key[2:]
+            followee = Follow.objects.filter(follower = key)
+            serializer = FolloweeSerializer(followee, many=True)
+            print(serializer.data)
+            return response.JsonResponse(serializer.data, safe=False)

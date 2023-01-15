@@ -36,7 +36,7 @@ class UserAdmin(BaseUserAdmin):
     filter_horizontal = ()
 
 class FollowAdmin(admin.ModelAdmin):
-    list_display = ('id','__str__')
+    list_display = ('id','follower', 'followee','following')
 
 
 

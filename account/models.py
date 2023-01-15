@@ -70,7 +70,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     image = models.TextField(
-        null=False
+        null=True
     )
 
     date_joined = models.DateTimeField(
@@ -128,5 +128,5 @@ class Follow(models.Model):
         related_name='followee'
         )
 
-    def __str__(self):
+    def following(self):
         return f'{self.follower.nickname} is following {self.followee.nickname}'
