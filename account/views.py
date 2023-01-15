@@ -55,7 +55,7 @@ def account_view(request):
         data_introduce = request.data.get('introduce')
         data_image = request.data.get('image')
 
-        if User.objects.filter(uid = data_uid):
+        if User.objects.filter(uid = data_uid) or User.objects.filter(email = data_email):
             return response.JsonResponse({"status" : "already exist"})
         else:
             try:
@@ -71,7 +71,7 @@ def account_view(request):
                 )
                 return response.JsonResponse({"status" : "good"})
             except:
-                return response.JsonResponse({"status": "error"})
+                return response.JsonResponse({"status" : "error"})
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
