@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import response
 from rest_framework.decorators import api_view
-from datetime import datetime
 
 from django.core.files.storage import FileSystemStorage
 from .util import OverwriteStorage, image_upload
@@ -25,6 +24,7 @@ class FollowerSerializer(serializers.ModelSerializer):
     
     nickname = serializers.SerializerMethodField('get_nickname')
     image = serializers.SerializerMethodField('get_image')
+    print(image)
 
     class Meta :
         model = Follow
@@ -53,28 +53,22 @@ def account_view(request):
         data_uid = request.data.get('uid')
         data_email = request.data.get('email')
         data_nickname = request.data.get('nickname')
-        data_gender = request.data.get('gender')
-        data_birth = request.data.get('birth')
-        data_introduce = request.data.get('introduce')
-        try :
-            data_image = request.FILES.get('image')
-            profile_image = FileSystemStorage().save(image_upload(data_uid, data_image.name), data_image)
-        except : 
-            profile_image = ''
-
         if User.objects.filter(uid = data_uid) or User.objects.filter(email = data_email):
             return response.JsonResponse({"status" : "already exist"})
         else:
-                User.objects.create(
+                user = User.objects.create(
                     uid = data_uid,
                     email = data_email,
-                    nickname = data_nickname,
-                    gender = data_gender,
-                    birth = data_birth,
-                    introduce = data_introduce,
-                    image = profile_image
-                )
-                return response.JsonResponse({"status" : "good"})
+                    nickname = data_nickname)
+                for keys in request.data:
+                    if hasattr(user, keys) == True:
+                        if keys == 'image' and request.FILES.get('image'):
+                            data_image = request.FILES.get('image')
+                            setattr(user, keys, FileSystemStorage().save(image_upload(user.uid, data_image.name), data_image))
+                        else:
+                            setattr(user, keys, request.data[keys])
+                user.save()
+                return response.JsonResponse({"status" : "good"}, status=201)
 
 
 
@@ -96,6 +90,8 @@ def account_detail_view(request, key):
                     if keys == 'image' and request.FILES.get('image'):
                         data_image = request.FILES.get('image')
                         setattr(user, keys, OverwriteStorage().save(image_upload(user.uid, data_image.name), data_image))
+                    elif keys == 'uid' or keys == 'email':
+                        pass
                     else:
                         setattr(user, keys, request.data[keys])
             user.save()
@@ -105,22 +101,54 @@ def account_detail_view(request, key):
     elif request.method == 'DELETE':
         if User.objects.filter(uid = key):
             user = User.objects.get(uid = key)
+            image = user.image
+            FileSystemStorage().delete(image)
             user.delete()
             return response.JsonResponse({"status" : "good"})
         else:
             return response.JsonResponse({"status" : "user not found"})
 
 @api_view(['GET', 'POST', 'DELETE'])
-def follow_view(request, key):
+def follow_view(request):
     if request.method == 'GET':
-        if key[0] == 'r':
-            key = key[2:]
+        if request.GET.get('follower', default = None) != None:
+            key = request.GET.get('follower', default = None)
             follower = Follow.objects.filter(followee = key)
             serializer = FollowerSerializer(follower, many=True)
             return response.JsonResponse(serializer.data, safe=False)
-        elif key[0] == 'e':
-            key = key[2:]
+            
+        elif request.GET.get('followee', default = None) != None:
+            key = request.GET.get('followee', default = None)
             followee = Follow.objects.filter(follower = key)
             serializer = FolloweeSerializer(followee, many=True)
             print(serializer.data)
             return response.JsonResponse(serializer.data, safe=False)
+        else:
+            return response.JsonResponse({"status": "bad request"})
+    if request.method == 'POST':
+        try : 
+            data_follower = User.objects.get(uid = request.data.get('follower'))
+            data_followee = User.objects.get(uid = request.data.get('followee'))
+        except :
+            return response.JsonResponse({"status" : "follow user not found"})
+
+        if Follow.objects.filter(follower = data_follower, followee=data_followee):
+            return response.JsonResponse({"status":"already following"})
+        else:
+            Follow.objects.create(
+                follower = data_follower,
+                followee = data_followee
+            )
+            return response.JsonResponse({"status":"done"})
+    elif request.method == 'DELETE':
+        try : 
+            data_follower = User.objects.get(uid = request.data.get('follower'))
+            data_followee = User.objects.get(uid = request.data.get('followee'))
+        except :
+            return response.JsonResponse({"status" : "follow user not found"})
+
+        if Follow.objects.filter(follower = data_follower, followee=data_followee):
+            Follow.objects.get(follower = data_follower, followee=data_followee).delete()
+            return response.JsonResponse({"status":"unfollow done"})
+        else:
+            return response.JsonResponse({"status" : "already unfollowed"})

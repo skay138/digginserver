@@ -1,6 +1,7 @@
 from django.db import models
 from datetime import datetime
 from account.models import User
+from django.utils import timezone
 
 # Create your models here.
 
@@ -13,10 +14,12 @@ class Post(models.Model):
     title = models.TextField(
         null=True,
         blank=True,
+        default=timezone.now
 
     )
     index = models.TextField(
-        max_length=255
+        max_length=255,
+        null=True
     )
     youtube_link = models.TextField(
         null=False

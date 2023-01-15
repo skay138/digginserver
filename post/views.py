@@ -37,24 +37,21 @@ def post_view(request):
     
     elif request.method == 'POST':
         data_user = request.data.get('uid')
-        data_title = request.data.get('title')
-        data_index = request.data.get('index')
         data_youtube_link = request.data.get('youtube_link')
-        data_parent_id = request.data.get('parent_id')
         if youtube_link_varify(data_youtube_link):
             pass
         else :
             return response.JsonResponse({"status":"youtube_link_error"})
         if User.objects.filter(uid=data_user):
             user = User.objects.get(uid=data_user)
-            Post.objects.create(
+            post = Post.objects.create(
                 author = user,
-                title = data_title,
-                index = data_index,
-                youtube_link = data_youtube_link,
-                parent_id = data_parent_id,
-                date = datetime.now()
+                youtube_link = data_youtube_link
             )
+            for keys in request.data:
+                if hasattr(post, keys) == True:
+                    setattr(post, keys, request.data[keys])
+            post.save()            
             return response.JsonResponse({"status": "good"})
         else:
             return response.JsonResponse({"status": 'user not found'})
@@ -64,9 +61,7 @@ def post_detail_view(request, pk):
     if request.method == 'GET':
         if Post.objects.filter(id=pk):
             post = Post.objects.get(id=pk)
-
             serializer = PostSerializer(post)
-
             return response.JsonResponse(serializer.data, status=200)
         else:
             return response.JsonResponse({"status" : "post not found"})

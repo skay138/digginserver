@@ -71,7 +71,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True
     )
 
-    image = models.ImageField(
+    image = models.TextField(
         null=True
     )
 

@@ -3,8 +3,8 @@ from . import views
 
 urlpatterns = [
     path('', views.account_view),
+    path('follow', views.follow_view),
     path('<str:key>', views.account_detail_view),
-    path('follow/', views.follow_view)
     # path('<int:pk>', views.post_detail_view),
     # path('get/<int:key>/<int:page>', views.get_posts_view),
     # path('mypost/<str:key>', views.my_posts_view)
