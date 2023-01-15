@@ -4,7 +4,7 @@ from django.contrib.auth.models import (
 from django.db import models
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from datetime import datetime
+
 
 
 class UserManager(BaseUserManager):
@@ -61,15 +61,17 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     gender = models.TextField(
         max_length=1,
+        null=True
     )
 
     birth = models.DateField(null=True)
 
     introduce = models.TextField(
-        max_length=100   
+        max_length=100,
+        null=True
     )
 
-    image = models.TextField(
+    image = models.ImageField(
         null=True
     )
 

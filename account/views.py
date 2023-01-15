@@ -3,6 +3,9 @@ from django.http import response
 from rest_framework.decorators import api_view
 from datetime import datetime
 
+from django.core.files.storage import FileSystemStorage
+from .util import OverwriteStorage, image_upload
+
 from account.models import User, Follow
 from rest_framework import serializers
 
@@ -53,12 +56,15 @@ def account_view(request):
         data_gender = request.data.get('gender')
         data_birth = request.data.get('birth')
         data_introduce = request.data.get('introduce')
-        data_image = request.data.get('image')
+        try :
+            data_image = request.FILES.get('image')
+            profile_image = FileSystemStorage().save(image_upload(data_uid, data_image.name), data_image)
+        except : 
+            profile_image = ''
 
         if User.objects.filter(uid = data_uid) or User.objects.filter(email = data_email):
             return response.JsonResponse({"status" : "already exist"})
         else:
-            try:
                 User.objects.create(
                     uid = data_uid,
                     email = data_email,
@@ -66,12 +72,10 @@ def account_view(request):
                     gender = data_gender,
                     birth = data_birth,
                     introduce = data_introduce,
-                    image = data_image,
-                    date_joined = datetime.now()
+                    image = profile_image
                 )
                 return response.JsonResponse({"status" : "good"})
-            except:
-                return response.JsonResponse({"status" : "error"})
+
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
@@ -89,7 +93,11 @@ def account_detail_view(request, key):
             user = User.objects.get(uid = key)
             for keys in request.data:
                 if hasattr(user, keys) == True:
-                    setattr(user, keys, request.data[keys])
+                    if keys == 'image' and request.FILES.get('image'):
+                        data_image = request.FILES.get('image')
+                        setattr(user, keys, OverwriteStorage().save(image_upload(user.uid, data_image.name), data_image))
+                    else:
+                        setattr(user, keys, request.data[keys])
             user.save()
             return response.JsonResponse({"status": "good"})
         else:
