@@ -1,8 +1,6 @@
 from django.shortcuts import render
 from django.http import response
 from rest_framework.decorators import api_view
-from datetime import datetime
-import requests
 
 from .models import Post
 from account.models import User
@@ -24,7 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta :
         model = Post
-        fields = ['id', 'parent_id','title', 'index', 'youtube_link', 'nickname', 'uid', 'date', 'youtube_data']
+        fields = ['id', 'parent_id','title', 'content', 'youtube_link', 'nickname', 'uid', 'date', 'youtube_data']
 
 @api_view(['POST', 'GET'])
 def post_view(request):

@@ -41,7 +41,8 @@ INSTALLED_APPS = [
 
     #my apps
     'account',
-    'post'
+    'post',
+    'comment'
 ]
 
 #기본 유저모델 설정

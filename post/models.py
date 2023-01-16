@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 from account.models import User
 from django.utils import timezone
 
@@ -9,7 +8,7 @@ class Post(models.Model):
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name='user',
+        related_name='post',
     )
     title = models.TextField(
         null=True,
@@ -17,7 +16,7 @@ class Post(models.Model):
         default=timezone.now
 
     )
-    index = models.TextField(
+    content = models.TextField(
         max_length=255,
         null=True
     )
@@ -29,7 +28,7 @@ class Post(models.Model):
         blank=True
     )
     date = models.DateTimeField(
-        default=datetime.now(),
+        default=timezone.now,
         null=True,
     )
 
