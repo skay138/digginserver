@@ -44,13 +44,23 @@ class FolloweeSerializer(serializers.ModelSerializer):
         model = Follow
         fields = ['followee', 'nickname', 'image']
 
-@api_view(['POST', 'GET'])
+@api_view(['POST', 'GET', 'PUT', 'DELETE'])
 def account_view(request):
-    if request.method == 'GET':
-        return response.JsonResponse({"status" : "not build"})
-
+    if request.method == 'GET' :
+        key = request.GET.get('uid')
+        if User.objects.filter(uid = key):
+            user = User.objects.get(uid = key)
+            serializer = UserSerializer(user)
+            return response.JsonResponse(serializer.data, status=200)
+        else:
+            return response.JsonResponse({"status" : "user not found"})
+               
     elif request.method == 'POST':
-        data_uid = request.data.get('uid')
+        if request.data.get('uid'):
+            data_uid = request.data.get('uid')
+            print(data_uid)
+        else:
+            return response.JsonResponse({"status":"uid or path error"})
         data_email = request.data.get('email')
         data_nickname = request.data.get('nickname')
         if User.objects.filter(uid = data_uid) or User.objects.filter(email = data_email):
@@ -69,22 +79,14 @@ def account_view(request):
                             setattr(user, keys, request.data[keys])
                 user.save()
                 return response.JsonResponse({"status" : "good"}, status=201)
-
-
-
-@api_view(['GET', 'DELETE', 'PUT'])
-def account_detail_view(request, key):
-    if request.method == 'GET':
-        if User.objects.filter(uid = key):
-            user = User.objects.get(uid = key)
-            serializer = UserSerializer(user)
-            return response.JsonResponse(serializer.data, status=200)
-        else:
-            return response.JsonResponse({"status" : "user not found"})
-
     elif request.method == 'PUT':
-        if User.objects.filter(uid = key): 
-            user = User.objects.get(uid = key)
+        if request.data.get('uid'):
+            data_uid = request.data.get('uid')
+            print(data_uid)
+        else:
+            return response.JsonResponse({"status":"uid error"})
+        if User.objects.filter(uid = data_uid): 
+            user = User.objects.get(uid = data_uid)
             for keys in request.data:
                 if hasattr(user, keys) == True:
                     if keys == 'image' and request.FILES.get('image'):
@@ -97,16 +99,24 @@ def account_detail_view(request, key):
             user.save()
             return response.JsonResponse({"status": "good"})
         else:
-            return response.JsonResponse({"status" : "user not found"})
+            return response.JsonResponse({"status" : "user not found"})      
+
     elif request.method == 'DELETE':
-        if User.objects.filter(uid = key):
-            user = User.objects.get(uid = key)
+        if request.data.get('uid'):
+            data_uid = request.data.get('uid')
+            print(data_uid)
+        else:
+            return response.JsonResponse({"status":"uid error"})
+        if User.objects.filter(uid = data_uid):
+            user = User.objects.get(uid = data_uid)
             image = user.image
             FileSystemStorage().delete(image)
             user.delete()
             return response.JsonResponse({"status" : "good"})
         else:
             return response.JsonResponse({"status" : "user not found"})
+
+
 
 @api_view(['GET', 'POST', 'DELETE'])
 def follow_view(request):

@@ -47,7 +47,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         unique=True,
         null=False,
         max_length=255,
-        primary_key=True
+        primary_key=True,
     )
     email = models.EmailField(
         verbose_name=_('Email address'),
