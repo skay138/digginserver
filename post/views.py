@@ -27,11 +27,19 @@ class PostSerializer(serializers.ModelSerializer):
 @api_view(['POST', 'GET'])
 def post_view(request):
     if request.method == 'GET':
+        number = int(request.GET.get('number', default=3))
+        page = int(request.GET.get('page', default=1))
         post = Post.objects.latest('id')
+        post_array = []
+        collected_post = 0
 
-        serializer = PostSerializer(post)
+        for i in range(post.id - (page-1)*number, 0, -1):
+            if Post.objects.filter(id = i) and collected_post!= number:
+                post_array.append(Post.objects.get(id = i))
+                collected_post += 1
+        serializer = PostSerializer(post_array, many=True)
 
-        return response.JsonResponse(serializer.data, status=200)
+        return response.JsonResponse(serializer.data, safe=False)
     
     elif request.method == 'POST':
         data_user = request.data.get('uid')
@@ -94,40 +102,32 @@ def post_detail_view(request, pk):
         else:
             return response.JsonResponse({"status" : "post not found"})
 
+
+
+@api_view(['GET'])
+def posts_search_view(request):
+    if request.method == 'GET':
+        if request.GET.get('title', default = None) != None :
+            key = request.GET.get('title', default = None)
+            post=Post.objects.filter(title__contains = key).order_by('-id')
+            serializer = PostSerializer(post, many=True)
+            return response.JsonResponse(serializer.data, safe=False)
+        elif request.GET.get('author', default = None) != None :
+            key = request.GET.get('author', default = None)
+            user = User.objects.filter(nickname__contains = key)
+            post=Post.objects.filter(author__in = user).order_by('-id')
+            serializer = PostSerializer(post, many=True)
+            return response.JsonResponse(serializer.data, safe=False)
+
+
 @api_view(["GET"])
-def get_posts_view(requset, key, page):
-    post = Post.objects.latest('id')
-    post_array = []
-    collected_post = 0
-
-    for i in range(post.id - (page-1)*key, 0, -1):
-        if Post.objects.filter(id = i) and collected_post!= key:
-            post_array.append(Post.objects.get(id = i))
-            collected_post += 1
-    serializer = PostSerializer(post_array, many=True)
-
-    return response.JsonResponse(serializer.data, safe=False)
-
-@api_view(["GET"])
-def posts_search_view(request, key):
-    if key[0] == 't':
-        key = key[2:]
-        print(key)
-        post=Post.objects.filter(title = key)
+def my_posts_view(request):
+    if request.GET.get('uid', default = None) != None :
+        key = request.GET.get('uid')
+        author = User.objects.get(uid = key)
+        post = Post.objects.filter(author = author).order_by('-id')
         serializer = PostSerializer(post, many=True)
         return response.JsonResponse(serializer.data, safe=False)
-    elif key[0] == 'u':
-        key = key[2:]
-        uid = User.objects.get(nickname = key).uid
-        post=Post.objects.filter(author = uid)
-        serializer = PostSerializer(post, many=True)
-        return response.JsonResponse(serializer.data, safe=False)
-
-
-@api_view(["GET"])
-def my_posts_view(request, key):
-    author = User.objects.get(uid = key)
-    post = Post.objects.filter(author = author)
-    serializer = PostSerializer(post, many=True)
-    return response.JsonResponse(serializer.data, safe=False)
+    else :
+        return response.JsonResponse({"status":"request error"})
     
