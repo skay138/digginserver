@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
 
     #my apps
+    'config',
     'account',
     'post',
     'comment',

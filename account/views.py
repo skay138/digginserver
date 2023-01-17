@@ -8,6 +8,10 @@ from .util import OverwriteStorage, image_upload
 from account.models import User, Follow
 from rest_framework import serializers
 
+
+def index(req):
+    return render(req, 'index.html')
+
 # Create your views here.
 class UserSerializer(serializers.ModelSerializer):
 
