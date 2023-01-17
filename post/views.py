@@ -15,14 +15,29 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.author.uid
     def get_video_data(self, obj):
         return get_youtube_info(obj.youtube_link)
-    
+
+    def get_parent_author(self, obj):
+        if obj.parent_id:
+            post_parent_id = obj.parent_id
+            post = Post.objects.get(id = post_parent_id)
+            parent_author = {
+                'id' : post_parent_id,
+                'uid' : post.author.uid,
+                'nickname' : post.author.nickname,
+                'image' : post.author.image.url
+            }
+            return parent_author
+        else:
+            return    
+
     nickname = serializers.SerializerMethodField('get_author_nickname')
     uid = serializers.SerializerMethodField('get_author_uid')
     youtube_data = serializers.SerializerMethodField('get_video_data')
+    parent = serializers.SerializerMethodField('get_parent_author')
 
     class Meta :
         model = Post
-        fields = ['id', 'parent_id','title', 'content', 'youtube_link', 'nickname', 'uid', 'date', 'youtube_data']
+        fields = ['id','parent','title', 'content', 'youtube_link', 'nickname', 'uid', 'date', 'youtube_data']
 
 @api_view(['POST', 'GET'])
 def post_view(request):

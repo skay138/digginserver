@@ -7,7 +7,7 @@ from django.utils.translation import gettext_lazy as _
 
 
 
-class UserManager(BaseUserManager):
+class UserManager(BaseUserManager): 
     def create_user(self, email, uid, nickname, password=None):
         """
         주어진 이메일, 닉네임, 비밀번호 등 개인정보로 User 인스턴스 생성
@@ -71,7 +71,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True
     )
 
-    image = models.TextField(
+    image = models.ImageField(
+        upload_to='profile_image/',
         null=True
     )
 
@@ -105,7 +106,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.nickname
-
+    
     @property
     def is_staff(self):
         "Is the user a member of staff?"

@@ -12,7 +12,7 @@ class OverwriteStorage(FileSystemStorage):
         return name
 
 
-def image_upload(uid, filename):
-    path = 'media/profile_image/'
+def image_upload(uid):
+    path = 'profile_image/'
     return f'{path}{uid}.png'
 

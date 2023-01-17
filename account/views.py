@@ -24,7 +24,6 @@ class FollowerSerializer(serializers.ModelSerializer):
     
     nickname = serializers.SerializerMethodField('get_nickname')
     image = serializers.SerializerMethodField('get_image')
-    print(image)
 
     class Meta :
         model = Follow
@@ -74,7 +73,7 @@ def account_view(request):
                     if hasattr(user, keys) == True:
                         if keys == 'image' and request.FILES.get('image'):
                             data_image = request.FILES.get('image')
-                            setattr(user, keys, FileSystemStorage().save(image_upload(user.uid, data_image.name), data_image))
+                            setattr(user, keys, FileSystemStorage().save(image_upload(user.uid), data_image))
                         else:
                             setattr(user, keys, request.data[keys])
                 user.save()
@@ -91,7 +90,7 @@ def account_view(request):
                 if hasattr(user, keys) == True:
                     if keys == 'image' and request.FILES.get('image'):
                         data_image = request.FILES.get('image')
-                        setattr(user, keys, OverwriteStorage().save(image_upload(user.uid, data_image.name), data_image))
+                        setattr(user, keys, OverwriteStorage().save(image_upload(user.uid), data_image))
                     elif keys == 'uid' or keys == 'email':
                         pass
                     else:
@@ -109,7 +108,7 @@ def account_view(request):
             return response.JsonResponse({"status":"uid error"})
         if User.objects.filter(uid = data_uid):
             user = User.objects.get(uid = data_uid)
-            image = user.image
+            image = str(user.image)
             FileSystemStorage().delete(image)
             user.delete()
             return response.JsonResponse({"status" : "good"})

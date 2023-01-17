@@ -15,13 +15,16 @@ class CommentSerializer(serializers.ModelSerializer):
         return obj.author.nickname
     def get_author_uid(self, obj):
         return obj.author.uid
+    def get_author_image(self, obj):
+        return obj.author.image.url
 
     nickname = serializers.SerializerMethodField('get_author_nickname')
     uid = serializers.SerializerMethodField('get_author_uid')
+    image = serializers.SerializerMethodField('get_author_image')
 
     class Meta:
         model = Comment
-        fields = ['id', 'parent_id', 'uid', 'nickname', 'content',]
+        fields = ['id', 'parent_id', 'uid', 'nickname', 'image', 'content',]
 
 @api_view(['GET', 'POST', 'PUT', 'DELETE'])
 def comment_detail_view(request, key):
