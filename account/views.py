@@ -1,12 +1,17 @@
 from django.shortcuts import render
 from django.http import response
-from rest_framework.decorators import api_view
-
-from django.core.files.storage import FileSystemStorage
-from .util import OverwriteStorage, image_upload
-
-from account.models import User, Follow
 from rest_framework import serializers
+from django.core.files.storage import FileSystemStorage
+
+##FOR SWAGGER
+from rest_framework.views import APIView
+from drf_yasg.utils       import swagger_auto_schema
+from drf_yasg             import openapi  
+from rest_framework.parsers import MultiPartParser
+
+from .util import OverwriteStorage, image_upload
+from account.models import User, Follow
+
 
 
 def index(req):
@@ -17,39 +22,21 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta :
         model = User
-        fields = ['uid','nickname','introduce','image','is_active']
+        fields = ['uid','email','nickname','introduce','image', 'gender', 'birth','is_active']
 
-class FollowerSerializer(serializers.ModelSerializer):
-    def get_nickname(self, obj):
-        return obj.follower.nickname
+class SwaggerDeleteSerializer(serializers.ModelSerializer):
 
-    def get_image(self, obj):
-        return obj.follower.image
+    class Meta :
+        model = User
+        fields = ['uid']
+
+
+class AccountView(APIView):
+    parser_classes = [MultiPartParser]
+    QueryUid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="uid", default=2)
     
-    nickname = serializers.SerializerMethodField('get_nickname')
-    image = serializers.SerializerMethodField('get_image')
-
-    class Meta :
-        model = Follow
-        fields = ['follower', 'nickname', 'image']
-
-class FolloweeSerializer(serializers.ModelSerializer):
-    def get_nickname(self, obj):
-        return obj.followee.nickname
-
-    def get_image(self, obj):
-        return obj.followee.image
-
-    nickname = serializers.SerializerMethodField('get_nickname')
-    image = serializers.SerializerMethodField('get_image')
-
-    class Meta :
-        model = Follow
-        fields = ['followee', 'nickname', 'image']
-
-@api_view(['POST', 'GET', 'PUT', 'DELETE'])
-def account_view(request):
-    if request.method == 'GET' :
+    @swagger_auto_schema(manual_parameters=[QueryUid] , operation_description='')
+    def get(self, request):
         key = request.GET.get('uid')
         if User.objects.filter(uid = key):
             user = User.objects.get(uid = key)
@@ -57,8 +44,9 @@ def account_view(request):
             return response.JsonResponse(serializer.data, status=200)
         else:
             return response.JsonResponse({"status" : "user not found"})
-               
-    elif request.method == 'POST':
+
+    @swagger_auto_schema(request_body=UserSerializer, operation_description="ONLY ADD UID '7707'")
+    def post(self, request):
         if request.data.get('uid'):
             data_uid = request.data.get('uid')
             print(data_uid)
@@ -82,7 +70,9 @@ def account_view(request):
                             setattr(user, keys, request.data[keys])
                 user.save()
                 return response.JsonResponse({"status" : "good"}, status=201)
-    elif request.method == 'PUT':
+
+    @swagger_auto_schema(request_body=UserSerializer, operation_description="ONLY USE UID 7707 , email not required(cannot be modified)")
+    def put(self, request):
         if request.data.get('uid'):
             data_uid = request.data.get('uid')
             print(data_uid)
@@ -102,9 +92,10 @@ def account_view(request):
             user.save()
             return response.JsonResponse({"status": "good"})
         else:
-            return response.JsonResponse({"status" : "user not found"})      
+            return response.JsonResponse({"status" : "user not found"})   
 
-    elif request.method == 'DELETE':
+    @swagger_auto_schema(request_body=SwaggerDeleteSerializer, operation_description='ONLY USE UID 7707, SEND UID BY REQUEST_BODY')
+    def delete(self, request):
         if request.data.get('uid'):
             data_uid = request.data.get('uid')
             print(data_uid)
@@ -119,11 +110,47 @@ def account_view(request):
         else:
             return response.JsonResponse({"status" : "user not found"})
 
+class FollowerSerializer(serializers.ModelSerializer):
+    def get_nickname(self, obj):
+        return obj.follower.nickname
+
+    def get_image(self, obj):
+        return obj.follower.image.url
+    
+    nickname = serializers.SerializerMethodField('get_nickname')
+    image = serializers.SerializerMethodField('get_image')
+
+    class Meta :
+        model = Follow
+        fields = ['follower', 'nickname', 'image']
+
+class FolloweeSerializer(serializers.ModelSerializer):
+    def get_nickname(self, obj):
+        return obj.followee.nickname
+
+    def get_image(self, obj):
+        return obj.followee.image.url
+
+    nickname = serializers.SerializerMethodField('get_nickname')
+    image = serializers.SerializerMethodField('get_image')
+
+    class Meta :
+        model = Follow
+        fields = ['followee', 'nickname', 'image']
 
 
-@api_view(['GET', 'POST', 'DELETE'])
-def follow_view(request):
-    if request.method == 'GET':
+class FollowSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Follow
+        fields = "__all__"
+
+class FollowView(APIView):
+    follower = openapi.Parameter('follower', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's follower", default=2)
+    followee = openapi.Parameter('followee', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's followee")
+
+    @swagger_auto_schema(manual_parameters=[follower, followee])
+    def get(self, request):
         if request.GET.get('follower', default = None) != None:
             key = request.GET.get('follower', default = None)
             follower = Follow.objects.filter(followee = key)
@@ -138,7 +165,9 @@ def follow_view(request):
             return response.JsonResponse(serializer.data, safe=False)
         else:
             return response.JsonResponse({"status": "bad request"})
-    if request.method == 'POST':
+
+    @swagger_auto_schema(request_body=FollowSerializer)      
+    def post(self, request):
         try : 
             data_follower = User.objects.get(uid = request.data.get('follower'))
             data_followee = User.objects.get(uid = request.data.get('followee'))
@@ -153,7 +182,9 @@ def follow_view(request):
                 followee = data_followee
             )
             return response.JsonResponse({"status":"done"})
-    elif request.method == 'DELETE':
+
+    @swagger_auto_schema(request_body=FollowSerializer) 
+    def delete(self, request):
         try : 
             data_follower = User.objects.get(uid = request.data.get('follower'))
             data_followee = User.objects.get(uid = request.data.get('followee'))
@@ -164,4 +195,4 @@ def follow_view(request):
             Follow.objects.get(follower = data_follower, followee=data_followee).delete()
             return response.JsonResponse({"status":"unfollow done"})
         else:
-            return response.JsonResponse({"status" : "already unfollowed"})
+            return response.JsonResponse({"status" : "already unfollowed"})   

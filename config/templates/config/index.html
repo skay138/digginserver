@@ -1,27 +1,35 @@
 <!DOCTYPE html>
 <html>
+	<style>
+		img {
+			margin: 50px;
+		}
+		img:hover {
+			cursor: pointer;
+			transform: scale(1.4);
+			transition: all 0.2s linear;
+		}
+	</style>
 
 <head>
 	<meta charset="UTF-8">
 	<title>DIGGIN SERVER</title>
-
 </head>
 
 <body>
-	<script>
-		a = window.location.href
-		var div = document.createElement('h2');
-		div.innerText = a;
-		document.body.appendChild(div)
-	</script>
+	<h2>THIS IS DIGGIN BACKEND PAGE</h2>
 	<hr>
-	<ul>
-		<li>admin/</li>
-		<li id="li">account/</li>
-		<li>post/</li>
-		<li>comment/</li>
-		<li>working...</li>
-	</ul>
+	<script>
+		window.document.onselectstart = new Function("return false");
+		a = window.location.href
+		var div = document.createElement('h3');
+		div.innerText = 'CLICK THE IMAGE TO CHECK OUT APIS';
+		document.body.appendChild(div)
+		function hi(){
+			location.href = a+'swagger'
+		}
+	</script>
+	<img src="/media/profile_image/1.png" width="300" onclick="hi()"/>
 </body>
 
 </html>

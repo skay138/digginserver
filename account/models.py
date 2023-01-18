@@ -61,7 +61,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     gender = models.TextField(
         max_length=1,
-        null=True
+        null=True,
+        help_text='M or F'
     )
 
     birth = models.DateField(null=True)

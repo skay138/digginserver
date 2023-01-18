@@ -5,7 +5,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', views.account_view),
-    path('follow', views.follow_view)
+    path('', views.AccountView.as_view()),
+    path('follow', views.FollowView.as_view())
 ]
 
