@@ -8,7 +8,7 @@ from drf_yasg.utils       import swagger_auto_schema
 from drf_yasg             import openapi  
 from rest_framework.parsers import MultiPartParser
 
-from .util import OverwriteStorage, image_upload
+from .util import OverwriteStorage, image_upload, google_callback
 from account.models import User, Follow
 from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowerSerializer, FolloweeSerializer, FollowSerializer
 
@@ -22,18 +22,12 @@ def index(req):
 
 class AccountView(APIView):
     parser_classes = [MultiPartParser]
-    QueryUid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="uid", default=2)
+    code = openapi.Parameter('code', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="google code")
     
-    @swagger_auto_schema(manual_parameters=[QueryUid] , operation_description='')
+    @swagger_auto_schema(manual_parameters=[code] , operation_description='')
     def get(self, request):
-        user = request.user
-        key = request.GET.get('uid')
-        if User.objects.filter(uid = key):
-            user = User.objects.get(uid = key)
-            serializer = UserSerializer(user)
-            return response.JsonResponse(serializer.data, status=200)
-        else:
-            return response.JsonResponse({"status" : "user not found"})
+        google_callback(request)
+
 
     @swagger_auto_schema(request_body=UserSerializer, operation_description="ONLY ADD UID '7707'")
     def post(self, request):
