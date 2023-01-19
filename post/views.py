@@ -3,7 +3,8 @@ from django.http import response
 from rest_framework.decorators import api_view
 
 from .models import Post
-from account.models import User
+from django.contrib.auth import get_user_model
+User = get_user_model()
 from rest_framework import serializers
 from .util import get_youtube_info, youtube_link_varify
 

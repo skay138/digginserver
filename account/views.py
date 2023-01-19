@@ -1,6 +1,5 @@
 from django.shortcuts import render
 from django.http import response
-from rest_framework import serializers
 from django.core.files.storage import FileSystemStorage
 
 ##FOR SWAGGER
@@ -11,6 +10,7 @@ from rest_framework.parsers import MultiPartParser
 
 from .util import OverwriteStorage, image_upload
 from account.models import User, Follow
+from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowerSerializer, FolloweeSerializer, FollowSerializer
 
 
 
@@ -18,17 +18,6 @@ def index(req):
     return render(req, 'index.html')
 
 # Create your views here.
-class UserSerializer(serializers.ModelSerializer):
-
-    class Meta :
-        model = User
-        fields = ['uid','email','nickname','introduce','image', 'gender', 'birth','is_active']
-
-class SwaggerDeleteSerializer(serializers.ModelSerializer):
-
-    class Meta :
-        model = User
-        fields = ['uid']
 
 
 class AccountView(APIView):
@@ -37,6 +26,7 @@ class AccountView(APIView):
     
     @swagger_auto_schema(manual_parameters=[QueryUid] , operation_description='')
     def get(self, request):
+        user = request.user
         key = request.GET.get('uid')
         if User.objects.filter(uid = key):
             user = User.objects.get(uid = key)
@@ -110,40 +100,7 @@ class AccountView(APIView):
         else:
             return response.JsonResponse({"status" : "user not found"})
 
-class FollowerSerializer(serializers.ModelSerializer):
-    def get_nickname(self, obj):
-        return obj.follower.nickname
 
-    def get_image(self, obj):
-        return obj.follower.image.url
-    
-    nickname = serializers.SerializerMethodField('get_nickname')
-    image = serializers.SerializerMethodField('get_image')
-
-    class Meta :
-        model = Follow
-        fields = ['follower', 'nickname', 'image']
-
-class FolloweeSerializer(serializers.ModelSerializer):
-    def get_nickname(self, obj):
-        return obj.followee.nickname
-
-    def get_image(self, obj):
-        return obj.followee.image.url
-
-    nickname = serializers.SerializerMethodField('get_nickname')
-    image = serializers.SerializerMethodField('get_image')
-
-    class Meta :
-        model = Follow
-        fields = ['followee', 'nickname', 'image']
-
-
-class FollowSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Follow
-        fields = "__all__"
 
 class FollowView(APIView):
     follower = openapi.Parameter('follower', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's follower", default=2)
