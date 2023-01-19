@@ -24,7 +24,7 @@ class AccountView(APIView):
     parser_classes = [MultiPartParser]
     code = openapi.Parameter('code', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="google code")
     
-    @swagger_auto_schema(manual_parameters=[code] , operation_description='')
+    @swagger_auto_schema(operation_description='GOOGLE LOGIN(CANNOT TRY OUT)')
     def get(self, request):
         google_callback(request)
 

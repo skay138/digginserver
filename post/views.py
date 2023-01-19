@@ -43,6 +43,7 @@ class PostSerializer(serializers.ModelSerializer):
 @api_view(['POST', 'GET'])
 def post_view(request):
     if request.method == 'GET':
+        print(request.user)
         number = int(request.GET.get('number', default=3))
         page = int(request.GET.get('page', default=1))
         post = Post.objects.latest('id')

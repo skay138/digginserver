@@ -8,6 +8,7 @@ from .serializer import UserSerializer
 from django.conf import settings
 from django.contrib.auth import login
 from rest_framework.exceptions import APIException
+from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
@@ -29,6 +30,7 @@ def logged(request, stage):
     login(request, request.user)
 
     user = request.user
+    print(user)
     serializer = UserSerializer(user)
     if stage == 'new':
         return response.JsonResponse(serializer.data, status=201)
@@ -36,23 +38,24 @@ def logged(request, stage):
         return response.JsonResponse(serializer.data, status=200)
 
 
-
+@api_view(['GET',])
 def google_callback(request):
     try:
-        app_rest_api_key = settings.GoogleAPIKEY
-        client_secret = settings.GOOGLECLIENTKEY
-        redirect_uri = '/'.join(['localhost', "account/google/callback"])
+        app_rest_api_key = settings.GOOGLE_API_KEY
+        client_secret = settings.GOOGLE_CLIENT_KEY
+        redirect_uri = '/'.join(['http://localhost:8000', "account/google/callback"])
 
         user_token = request.GET.get("code")
+
         # post request
         url = f"https://oauth2.googleapis.com/token?grant_type=authorization_code&client_id={app_rest_api_key}&redirect_uri={redirect_uri}&code={user_token}&client_secret={client_secret}"
         token_request = requests.post(url)
         token_response_json = token_request.json()
-        error = token_response_json.get("error", None)
+        error = token_response_json.get("error_description", None)
         
         # if there is an error from token_request
         if error is not None:
-            raise APIException(f"{user_token}" + token_response_json.get('error_description'))
+            return response.JsonResponse({"status":f"{error}"})
         access_token = token_response_json.get("access_token")
         
         # post request
@@ -82,4 +85,4 @@ def google_callback(request):
         return logged(request, stage) 
 
     except Exception as e:
-        return APIException(e)
+        response.JsonResponse({"status" : "comeback strong"})
