@@ -28,7 +28,7 @@ GOOGLE_CLIENT_KEY = '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'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['131.186.28.230', 'localhost']
+ALLOWED_HOSTS = ['131.186.28.230', 'localhost', 'diggin.kro.kr']
 
 
 # Application definition

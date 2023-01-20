@@ -43,7 +43,7 @@ def google_callback(request):
     try:
         app_rest_api_key = settings.GOOGLE_API_KEY
         client_secret = settings.GOOGLE_CLIENT_KEY
-        redirect_uri = '/'.join(['http://localhost:8000', "account/google/callback"])
+        redirect_uri = '/'.join(['http://diggin.kro.kr:8000', "account/google/callback"])
 
         user_token = request.GET.get("code")
 
