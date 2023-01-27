@@ -51,6 +51,7 @@ class SwaggerCommentDeleteSerializer(serializers.ModelSerializer):
 
 class CommentView(APIView):
 
+    @swagger_auto_schema(operation_description="KEY IS POST_ID")
     def get(self, request, key):
         if Post.objects.filter(id=key):
             data_comment = Comment.objects.filter(post = key)

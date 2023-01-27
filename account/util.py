@@ -10,7 +10,10 @@ from django.contrib.auth import login
 from rest_framework.exceptions import APIException
 from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
+
+
 
 class OverwriteStorage(FileSystemStorage):
 
@@ -36,53 +39,3 @@ def logged(request, stage):
         return response.JsonResponse(serializer.data, status=201)
     elif stage == 'login':
         return response.JsonResponse(serializer.data, status=200)
-
-
-@api_view(['GET',])
-def google_callback(request):
-    try:
-        app_rest_api_key = settings.GOOGLE_API_KEY
-        client_secret = settings.GOOGLE_CLIENT_KEY
-        redirect_uri = '/'.join(['http://diggin.kro.kr:8000', "account/google/callback"])
-
-        user_token = request.GET.get("code")
-
-        # post request
-        url = f"https://oauth2.googleapis.com/token?grant_type=authorization_code&client_id={app_rest_api_key}&redirect_uri={redirect_uri}&code={user_token}&client_secret={client_secret}"
-        token_request = requests.post(url)
-        token_response_json = token_request.json()
-        error = token_response_json.get("error_description", None)
-        
-        # if there is an error from token_request
-        if error is not None:
-            return response.JsonResponse({"status":f"{error}"})
-        access_token = token_response_json.get("access_token")
-        
-        # post request
-        profile_request = requests.get(
-            "https://www.googleapis.com/oauth2/v1/userinfo?alt=json",
-            headers={"Authorization": "Bearer {}".format(access_token)},
-        )
-        profile_json = profile_request.json()
-
-        # parsing profile json
-        email = profile_json.get("email", None)
-        if email is None:
-            raise APIException()
-
-        try:
-            stage = "login"
-            user = User.objects.get(email=email)
-        except User.DoesNotExist:
-            user = User.objects.create(
-                uid = uuid.uuid4(),
-                email=email,
-                is_active=True
-            )
-            stage = "new"
-
-        request.user = user
-        return logged(request, stage) 
-
-    except Exception as e:
-        response.JsonResponse({"status" : "comeback strong"})

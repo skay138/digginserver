@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-68bescj+e1ws&b!57e7&mpm%!p!&pk5=9^&q+md-p1uo%vqaqk'
 GOOGLE_API_KEY = '210367262581-nfb4pdcakmikvlvbtpll17bbbierhu8p.apps.googleusercontent.com'
 GOOGLE_CLIENT_KEY = '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'
+FIREBASE_CONFIG = os.path.join(BASE_DIR,'firebase-config.json')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -40,6 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    #FIREBASE
+    # 'firebase-admin',
 
     #SWAGGER
     'drf_yasg',
@@ -147,3 +151,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS' :{
+        'basic' : {
+            'type' : 'basic'
+        },
+
+        'Bearer':{
+            'type':'apiKey',
+            'name':'Authorization',
+            'in':'header'
+        }
+
+    }
+}

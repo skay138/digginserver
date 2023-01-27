@@ -1,48 +1,25 @@
 from django.shortcuts import render
 from django.http import response
-from rest_framework.decorators import api_view
+from .serializer import PostSerializer, PostSwaggerSerializer, PostDeleteSwaggerSerializer
+
+##FOR SWAGGER
+from rest_framework.views import APIView
+from drf_yasg.utils       import swagger_auto_schema
+from drf_yasg             import openapi 
 
 from .models import Post
 from django.contrib.auth import get_user_model
 User = get_user_model()
-from rest_framework import serializers
-from .util import get_youtube_info, youtube_link_varify
+from .util import youtube_link_varify
 
 # Create your views here.
-class PostSerializer(serializers.ModelSerializer):
-    def get_author_nickname(self, obj):
-        return obj.author.nickname
-    def get_author_uid(self, obj):
-        return obj.author.uid
-    def get_video_data(self, obj):
-        return get_youtube_info(obj.youtube_link)
 
-    def get_parent_author(self, obj):
-        if obj.parent_id:
-            post_parent_id = obj.parent_id
-            post = Post.objects.get(id = post_parent_id)
-            parent_author = {
-                'id' : post_parent_id,
-                'uid' : post.author.uid,
-                'nickname' : post.author.nickname,
-                'image' : post.author.image.url
-            }
-            return parent_author
-        else:
-            return    
+class PostView(APIView):
+    number = openapi.Parameter('number', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, default=3)
+    page = openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, default=1)
 
-    nickname = serializers.SerializerMethodField('get_author_nickname')
-    uid = serializers.SerializerMethodField('get_author_uid')
-    youtube_data = serializers.SerializerMethodField('get_video_data')
-    parent = serializers.SerializerMethodField('get_parent_author')
-
-    class Meta :
-        model = Post
-        fields = ['id','parent','title', 'content', 'youtube_link', 'nickname', 'uid', 'date', 'youtube_data']
-
-@api_view(['POST', 'GET'])
-def post_view(request):
-    if request.method == 'GET':
+    @swagger_auto_schema(manual_parameters=[number, page],operation_description="")
+    def get(self, request):
         print(request.user)
         number = int(request.GET.get('number', default=3))
         page = int(request.GET.get('page', default=1))
@@ -57,8 +34,9 @@ def post_view(request):
         serializer = PostSerializer(post_array, many=True)
 
         return response.JsonResponse(serializer.data, safe=False)
-    
-    elif request.method == 'POST':
+
+    @swagger_auto_schema(request_body=PostSwaggerSerializer)
+    def post(self, request):
         data_user = request.data.get('uid')
         data_youtube_link = request.data.get('youtube_link')
         if youtube_link_varify(data_youtube_link):
@@ -79,20 +57,24 @@ def post_view(request):
         else:
             return response.JsonResponse({"status": 'user not found'})
 
-@api_view(['PUT', 'GET', 'DELETE'])
-def post_detail_view(request, pk):
-    if request.method == 'GET':
-        if Post.objects.filter(id=pk):
-            post = Post.objects.get(id=pk)
-            serializer = PostSerializer(post)
-            return response.JsonResponse(serializer.data, status=200)
-        else:
-            return response.JsonResponse({"status" : "post not found"})
-    
-    elif request.method == 'PUT':
+
+
+class PostDetailView(APIView):
+    @swagger_auto_schema(tags=['PostDetail'])
+    def get(self, request, post_id):
+        if request.method == 'GET':
+            if Post.objects.filter(id=post_id):
+                post = Post.objects.get(id=post_id)
+                serializer = PostSerializer(post)
+                return response.JsonResponse(serializer.data, status=200)
+            else:
+                return response.JsonResponse({"status" : "post not found"})
+
+    @swagger_auto_schema(tags=['PostDetail'], request_body=PostSwaggerSerializer)
+    def put(self, request, post_id):
         data_user = request.data.get('uid')
         youtube_link = request.data.get('youtube_link')
-        post = Post.objects.get(id=pk)
+        post = Post.objects.get(id=post_id)
         if youtube_link_varify(youtube_link):
             pass
         else :
@@ -106,10 +88,11 @@ def post_detail_view(request, pk):
         else:
             return response.JsonResponse({'status' : 'not author'})
 
-    elif request.method == 'DELETE':
+    @swagger_auto_schema(tags=['PostDetail'], request_body=PostDeleteSwaggerSerializer)   
+    def delete(self, request, post_id):
         data_author = request.data.get('uid')
-        if Post.objects.filter(id = pk):
-            post = Post.objects.get(id=pk)
+        if Post.objects.filter(id = post_id):
+            post = Post.objects.get(id=post_id)
             if (post.author.uid == data_author):
                 post_title = post.title
                 post.delete()
@@ -117,15 +100,17 @@ def post_detail_view(request, pk):
             else:
                 return response.JsonResponse({"status" : "not author"})
         else:
-            return response.JsonResponse({"status" : "post not found"})
+            return response.JsonResponse({"status" : "post not found"})    
+        
 
-
-
-@api_view(['GET'])
-def posts_search_view(request):
-    if request.method == 'GET':
+class PostSearchView(APIView):
+    title = openapi.Parameter('title', openapi.IN_QUERY, type=openapi.TYPE_STRING)
+    author = openapi.Parameter('author', openapi.IN_QUERY, type=openapi.TYPE_STRING)
+    @swagger_auto_schema(manual_parameters=[title, author], operation_description="USE ONLY ONE PARAMETER")
+    def get(self, request):
         if request.GET.get('title', default = None) != None :
             key = request.GET.get('title', default = None)
+            print(key)
             post=Post.objects.filter(title__contains = key).order_by('-id')
             serializer = PostSerializer(post, many=True)
             return response.JsonResponse(serializer.data, safe=False)
@@ -135,16 +120,22 @@ def posts_search_view(request):
             post=Post.objects.filter(author__in = user).order_by('-id')
             serializer = PostSerializer(post, many=True)
             return response.JsonResponse(serializer.data, safe=False)
+        else:
+            return response.JsonResponse({"status":"wrong request"})
 
 
-@api_view(["GET"])
-def my_posts_view(request):
-    if request.GET.get('uid', default = None) != None :
-        key = request.GET.get('uid')
-        author = User.objects.get(uid = key)
-        post = Post.objects.filter(author = author).order_by('-id')
-        serializer = PostSerializer(post, many=True)
-        return response.JsonResponse(serializer.data, safe=False)
-    else :
-        return response.JsonResponse({"status":"request error"})
-    
+class MyPostView(APIView):
+    uid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, default=7707)
+    @swagger_auto_schema(manual_parameters=[uid])
+    def get(self, request):
+        if request.GET.get('uid', default = None) != None :
+            key = request.GET.get('uid')
+            try : 
+                author = User.objects.get(uid = key)
+                post = Post.objects.filter(author = author).order_by('-id')
+                serializer = PostSerializer(post, many=True)
+                return response.JsonResponse(serializer.data, safe=False)
+            except:
+                return response.JsonResponse({"status":"user not found"})
+        else :
+            return response.JsonResponse({"status":"request error"})    

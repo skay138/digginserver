@@ -8,7 +8,11 @@ from drf_yasg.utils       import swagger_auto_schema
 from drf_yasg             import openapi  
 from rest_framework.parsers import MultiPartParser
 
-from .util import OverwriteStorage, image_upload, google_callback
+#FIREBASE
+from firebase_admin import auth
+
+
+from .util import OverwriteStorage, image_upload, logged
 from account.models import User, Follow
 from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowerSerializer, FolloweeSerializer, FollowSerializer
 
@@ -19,14 +23,57 @@ def index(req):
 
 # Create your views here.
 
+class GoogleLoginView(APIView):
+    @swagger_auto_schema(tags=['FirebaseLogin'], operation_description='USE Bearer AUTHORIZATION')
+    def get(self, request):
+        if request.META.get('HTTP_AUTHORIZATION') :
+            authorization_header = request.META.get('HTTP_AUTHORIZATION')
+        else:
+            return response.JsonResponse({"status":"no token"})
+
+        try :
+            token = authorization_header.replace('Bearer', "")
+            decodeed_token = auth.verify_id_token(token)
+            print(decodeed_token)
+            firebase_user_id = decodeed_token['user_id']
+            email = decodeed_token['email']
+            email_verified = decodeed_token['email_verified']
+
+            if email_verified == 'true':   
+                try:
+                    stage = "login"
+                    user = User.objects.get(email=email)
+                except User.DoesNotExist:
+                    user = User.objects.create(
+                        uid = firebase_user_id,
+                        email=email,
+                        is_active=True
+                    )
+                    stage = "new"
+                request.user = user
+                return logged(request, stage)
+            else :
+                return response.JsonResponse({'status':'email not valid'}, status = 401)
+
+        except:
+            return response.JsonResponse({"status": "token is not valid"},status = 400)
 
 class AccountView(APIView):
     parser_classes = [MultiPartParser]
-    code = openapi.Parameter('code', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="google code")
+    uid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, default=2)
     
-    @swagger_auto_schema(operation_description='GOOGLE LOGIN(CANNOT TRY OUT)')
+    @swagger_auto_schema(manual_parameters=[uid], operation_description='GET USER INFO')
     def get(self, request):
-        google_callback(request)
+        key = request.GET.get('uid')
+        if request.user.is_authenticated:
+            if User.objects.filter(uid = key):
+                user = User.objects.get(uid = key)
+                serializer = UserSerializer(user)
+                return response.JsonResponse(serializer.data, status=200)
+            else:
+                return response.JsonResponse({"status" : "user not found"})
+        else:
+            return response.JsonResponse({"status":"not user"})
 
 
     @swagger_auto_schema(request_body=UserSerializer, operation_description="ONLY ADD UID '7707'")
@@ -100,7 +147,7 @@ class FollowView(APIView):
     follower = openapi.Parameter('follower', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's follower", default=2)
     followee = openapi.Parameter('followee', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's followee")
 
-    @swagger_auto_schema(manual_parameters=[follower, followee])
+    @swagger_auto_schema(tags=['account/follow'], manual_parameters=[follower, followee])
     def get(self, request):
         if request.GET.get('follower', default = None) != None:
             key = request.GET.get('follower', default = None)
@@ -112,12 +159,11 @@ class FollowView(APIView):
             key = request.GET.get('followee', default = None)
             followee = Follow.objects.filter(follower = key)
             serializer = FolloweeSerializer(followee, many=True)
-            print(serializer.data)
             return response.JsonResponse(serializer.data, safe=False)
         else:
             return response.JsonResponse({"status": "bad request"})
 
-    @swagger_auto_schema(request_body=FollowSerializer)      
+    @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer)      
     def post(self, request):
         try : 
             data_follower = User.objects.get(uid = request.data.get('follower'))
@@ -134,7 +180,7 @@ class FollowView(APIView):
             )
             return response.JsonResponse({"status":"done"})
 
-    @swagger_auto_schema(request_body=FollowSerializer) 
+    @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer) 
     def delete(self, request):
         try : 
             data_follower = User.objects.get(uid = request.data.get('follower'))

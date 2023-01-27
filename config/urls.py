@@ -29,7 +29,7 @@ schema_view_v1 = get_schema_view(
     openapi.Info(
         title="DIGGIN BACKEND APIS",
         default_version='v1',
-        description="THIS IS DIGGIN BACKEND API TEST PAGE",
+        description="THIS IS DIGGIN BACKEND API TEST PAGE\n\nBasic authorization>> CLICK Authorize Button on the right \n username : test@test.com \n password : 1",
         #terms_of_service="https://www.google.com/policies/terms/",
     ),
     public=True,
