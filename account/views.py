@@ -129,13 +129,15 @@ class AccountView(APIView):
     def delete(self, request):
         if request.data.get('uid'):
             data_uid = request.data.get('uid')
-            print(data_uid)
         else:
             return response.JsonResponse({"status":"uid error"})
         if User.objects.filter(uid = data_uid):
             user = User.objects.get(uid = data_uid)
-            image = str(user.image)
-            FileSystemStorage().delete(image)
+            try:
+                image = str(user.image)
+                FileSystemStorage().delete(image)
+            except:
+                print('no image to delete')
             user.delete()
             return response.JsonResponse({"status" : "good"})
         else:
