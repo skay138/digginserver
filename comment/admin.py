@@ -1,5 +1,6 @@
 from django.contrib import admin
 from .models import Comment
+from tag_like.models import CommentTag
 
 # Register your models here.
 

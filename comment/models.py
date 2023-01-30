@@ -24,3 +24,9 @@ class Comment(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        if self.content:
+            return self.content
+        else :
+            return 'no content'

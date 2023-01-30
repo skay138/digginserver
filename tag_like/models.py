@@ -16,3 +16,16 @@ class PostLike(models.Model):
         on_delete=models.CASCADE,
         related_name='like_post'
     )
+
+
+class CommentTag(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.PROTECT,
+        related_name='tag_user'
+    )
+    comment = models.ForeignKey(
+        Comment,
+        on_delete=models.CASCADE,
+        related_name='tag_comment'
+    )

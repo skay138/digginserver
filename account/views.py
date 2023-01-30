@@ -23,7 +23,7 @@ def index(req):
 
 # Create your views here.
 
-class GoogleLoginView(APIView):
+class FirebaseLoginView(APIView):
     @swagger_auto_schema(tags=['FirebaseLogin'], operation_description='USE Bearer AUTHORIZATION')
     def get(self, request):
         if request.META.get('HTTP_AUTHORIZATION') :

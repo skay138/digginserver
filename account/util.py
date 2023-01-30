@@ -1,6 +1,5 @@
 import os
 import requests
-import uuid
 
 from django.http import response
 from django.core.files.storage import FileSystemStorage
@@ -8,7 +7,6 @@ from .serializer import UserSerializer
 from django.conf import settings
 from django.contrib.auth import login
 from rest_framework.exceptions import APIException
-from rest_framework.decorators import api_view
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
