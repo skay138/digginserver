@@ -27,11 +27,15 @@ def image_upload(uid):
     path = 'profile_image/'
     return f'{path}{uid}.png'
 
+def bgimage_upload(uid):
+    path = 'bg_image/'
+    return f'{path}{uid}.png'
+
 def logged(request, stage):
     login(request, request.user)
 
     user = request.user
-    print(user+' logged in')
+    print(user.email+' logged in')
     serializer = UserSerializer(user)
     if stage == 'new':
         return response.JsonResponse(serializer.data, status=201)

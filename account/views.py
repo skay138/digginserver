@@ -20,7 +20,7 @@ firebase_admin.initialize_app(firebase_creds)
 
 
 
-from .util import OverwriteStorage, image_upload, logged
+from .util import OverwriteStorage, image_upload, logged, bgimage_upload
 from account.models import User, Follow
 from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowerSerializer, FolloweeSerializer, FollowSerializer
 
@@ -103,6 +103,9 @@ class AccountView(APIView):
                         if keys == 'image' and request.FILES.get('image'):
                             data_image = request.FILES.get('image')
                             setattr(user, keys, FileSystemStorage().save(image_upload(user.uid), data_image))
+                        elif keys == 'bgimage' and request.FILES.get('bgimage'):
+                            data_image = request.FILES.get('bgimage')
+                            setattr(user, keys, FileSystemStorage().save(bgimage_upload(user.uid), data_image))
                         else:
                             setattr(user, keys, request.data[keys])
                 user.save()
@@ -122,6 +125,9 @@ class AccountView(APIView):
                     if keys == 'image' and request.FILES.get('image'):
                         data_image = request.FILES.get('image')
                         setattr(user, keys, OverwriteStorage().save(image_upload(user.uid), data_image))
+                    elif keys == 'bgimage' and request.FILES.get('bgimage'):
+                        data_image = request.FILES.get('bgimage')
+                        setattr(user, keys, OverwriteStorage().save(bgimage_upload(user.uid), data_image))
                     elif keys == 'uid' or keys == 'email':
                         pass
                     else:

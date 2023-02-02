@@ -77,6 +77,11 @@ class User(AbstractBaseUser, PermissionsMixin):
         null=True
     )
 
+    bgimage = models.ImageField(
+        upload_to='bg_image/',
+        null=True
+    )
+
     date_joined = models.DateTimeField(
         verbose_name=_('Date joined'),
         default=timezone.now

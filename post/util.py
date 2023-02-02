@@ -22,5 +22,7 @@ def get_youtube_info(req):
 def youtube_link_varify(req):
     if "youtube.com/watch?v=" in req:
         return True
+    elif "youtu.be/" in req:
+        return True
     else:
         return False

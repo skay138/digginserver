@@ -5,7 +5,7 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta :
         model = User
-        fields = ['uid','email','nickname','introduce','image', 'gender', 'birth', 'is_signed','is_active']
+        fields = ['uid','email','nickname','introduce','image', 'bgimage' ,'gender', 'birth', 'is_signed','is_active']
 
 class SwaggerDeleteSerializer(serializers.ModelSerializer):
 
