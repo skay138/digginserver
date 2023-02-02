@@ -40,11 +40,13 @@ class PostLikeView(APIView):
             return response.JsonResponse({"status":"already liked"})
         else:
             try :
-                postlike = PostLike.objects.create(
+                PostLike.objects.create(
                     user = like_user,
                     post = like_post
                 )
-                print(postlike)
+                post = Post.objects.get(id = data_post_id)
+                post.like_count = PostLike.objects.filter(post = data_post_id).count()
+                post.save()
                 return response.JsonResponse({"status":"good"})
             except:
                 return response.JsonResponse({"status":"error"})
@@ -66,6 +68,9 @@ class PostLikeView(APIView):
         if PostLike.objects.filter(user = like_user, post = like_post):
             postlike = PostLike.objects.get(user = like_user, post = like_post)
             postlike.delete()
+            post = Post.objects.get(id = data_post_id)
+            post.like_count = PostLike.objects.filter(post = data_post_id).count()
+            post.save()
             return response.JsonResponse({"status":"unliked"})
         else:
             print(PostLike.objects.filter(user = like_user, post = like_post))

@@ -24,7 +24,7 @@ class UserAdmin(BaseUserAdmin):
     # These override the definitions on the base UserAdmin
     # that reference specific fields on auth.User.
     readonly_fields = ['image_tag']
-    list_display = ('uid','nickname', 'email', 'introduce','image_tag' ,'birth','is_active', 'is_superuser', 'date_joined')
+    list_display = ('uid','nickname', 'email', 'introduce','image_tag' ,'birth','is_active', 'is_superuser', 'is_signed', 'date_joined')
     list_display_links = ('email',)
     list_filter = ('is_superuser', 'is_active',)
     fieldsets = (

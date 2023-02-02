@@ -12,6 +12,9 @@ from django.contrib.auth import get_user_model
 User = get_user_model()
 from .util import youtube_link_varify
 
+from django.utils import timezone
+from datetime import timedelta
+
 # Create your views here.
 
 class PostView(APIView):
@@ -106,11 +109,12 @@ class PostDetailView(APIView):
 class PostSearchView(APIView):
     title = openapi.Parameter('title', openapi.IN_QUERY, type=openapi.TYPE_STRING)
     author = openapi.Parameter('author', openapi.IN_QUERY, type=openapi.TYPE_STRING)
-    @swagger_auto_schema(manual_parameters=[title, author], operation_description="USE ONLY ONE PARAMETER")
+    recommended = openapi.Parameter('recommended', openapi.IN_QUERY, type=openapi.TYPE_INTEGER)
+
+    @swagger_auto_schema(manual_parameters=[title, author, recommended], operation_description="USE ONLY ONE PARAMETER")
     def get(self, request):
         if request.GET.get('title', default = None) != None :
             key = request.GET.get('title', default = None)
-            print(key)
             post=Post.objects.filter(title__contains = key).order_by('-id')
             serializer = PostSerializer(post, context={'author': request.user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
@@ -120,6 +124,13 @@ class PostSearchView(APIView):
             post=Post.objects.filter(author__in = user).order_by('-id')
             serializer = PostSerializer(post, context={'author': request.user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
+        elif request.GET.get('recommended', default = None) != None :
+            key = request.GET.get('recommended', default = None)
+            one_week = timezone.now() - timedelta(weeks=1)
+            post=Post.objects.filter(date__gt = one_week).order_by('-like_count','-id')[:int(key)]
+            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            return response.JsonResponse(serializer.data, safe=False)
+
         else:
             return response.JsonResponse({"status":"wrong request"})
 

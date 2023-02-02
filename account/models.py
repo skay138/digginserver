@@ -82,6 +82,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         default=timezone.now
     )
 
+    is_signed = models.BooleanField(
+        default=False
+    )
+
     is_active = models.BooleanField(
         verbose_name=_('Is active'),
         default=True

@@ -10,6 +10,14 @@ from rest_framework.parsers import MultiPartParser
 
 #FIREBASE
 from firebase_admin import auth
+from config import settings
+from firebase_admin import credentials
+import firebase_admin
+
+firebase_creds=credentials.Certificate(settings.FIREBASE_CONFIG)
+firebase_admin.initialize_app(firebase_creds)
+
+
 
 
 from .util import OverwriteStorage, image_upload, logged
@@ -31,32 +39,30 @@ class FirebaseLoginView(APIView):
         else:
             return response.JsonResponse({"status":"no token"})
 
-        try :
-            token = authorization_header.replace('Bearer', "")
-            decodeed_token = auth.verify_id_token(token)
-            print(decodeed_token)
-            firebase_user_id = decodeed_token['user_id']
-            email = decodeed_token['email']
-            email_verified = decodeed_token['email_verified']
 
-            if email_verified == 'true':   
-                try:
-                    stage = "login"
-                    user = User.objects.get(email=email)
-                except User.DoesNotExist:
-                    user = User.objects.create(
-                        uid = firebase_user_id,
-                        email=email,
-                        is_active=True
-                    )
-                    stage = "new"
-                request.user = user
-                return logged(request, stage)
-            else :
-                return response.JsonResponse({'status':'email not valid'}, status = 401)
+        token = authorization_header.replace('Bearer', "")
+        decodeed_token = auth.verify_id_token(token)
+        firebase_user_id = decodeed_token['user_id']
+        email = decodeed_token['email']
+        email_verified = decodeed_token['email_verified']
 
-        except:
-            return response.JsonResponse({"status": "token is not valid"},status = 400)
+
+        if email_verified:   
+            try:
+                stage = "login"
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                user = User.objects.create(
+                    uid = firebase_user_id,
+                    email=email,
+                    is_active=True
+                )
+                stage = "new"
+            request.user = user
+            return logged(request, stage)
+        else :
+            return response.JsonResponse({'status':'email not valid'}, status = 401)
+
 
 class AccountView(APIView):
     parser_classes = [MultiPartParser]
@@ -129,6 +135,7 @@ class AccountView(APIView):
     def delete(self, request):
         if request.data.get('uid'):
             data_uid = request.data.get('uid')
+            print(data_uid)
         else:
             return response.JsonResponse({"status":"uid error"})
         if User.objects.filter(uid = data_uid):

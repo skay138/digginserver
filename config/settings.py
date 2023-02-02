@@ -29,7 +29,7 @@ FIREBASE_CONFIG = os.path.join(BASE_DIR,'firebase-config.json')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['131.186.28.230', 'localhost', 'diggin.kro.kr']
+ALLOWED_HOSTS = ['131.186.28.230', 'localhost', 'diggin.kro.kr', '127.0.0.1']
 
 
 # Application definition

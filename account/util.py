@@ -31,7 +31,7 @@ def logged(request, stage):
     login(request, request.user)
 
     user = request.user
-    print(user)
+    print(user+' logged in')
     serializer = UserSerializer(user)
     if stage == 'new':
         return response.JsonResponse(serializer.data, status=201)

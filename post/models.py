@@ -23,6 +23,9 @@ class Post(models.Model):
     youtube_link = models.TextField(
         null=False
     )
+    like_count = models.IntegerField(
+        default=0
+    )
     parent_id = models.IntegerField(
         null=True,
         blank=True
