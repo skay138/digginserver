@@ -178,6 +178,7 @@ class FollowView(APIView):
         else:
             return response.JsonResponse({"status": "bad request"})
 
+
     @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer)      
     def post(self, request):
         try : 
