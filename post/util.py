@@ -13,7 +13,11 @@ def get_youtube_info(req):
     
     title = video_data['title']
     description = video_data['description']
-    thumbnail = video_data['thumbnails']['standard']['url']
+    try :
+        thumbnail = video_data['thumbnails']['standard']['url']
+    except:
+        thumbnail = video_data['thumbnails']['default']['url']
+        
     data = {"title" : title,
             "thumb" : thumbnail,
             "desc" : description
