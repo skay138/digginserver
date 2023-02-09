@@ -10,6 +10,7 @@ from drf_yasg             import openapi
 from .models import Post
 from django.contrib.auth import get_user_model
 User = get_user_model()
+from account.models import Follow
 from .util import youtube_link_varify
 
 from django.utils import timezone
@@ -148,5 +149,22 @@ class MyPostView(APIView):
                 return response.JsonResponse(serializer.data, safe=False)
             except:
                 return response.JsonResponse({"status":"user not found"})
+        else :
+            return response.JsonResponse({"status":"request error"})
+
+class MyFeedView(APIView):
+    uid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, default=2)
+    @swagger_auto_schema(manual_parameters=[uid])
+    def get(self, request):
+        if request.GET.get('uid', default = None) != None :
+            key = request.GET.get('uid')
+            try : 
+                user = User.objects.get(uid = key)
+            except:
+                return response.JsonResponse({"status":"user not found"})
+            follow = Follow.objects.filter(follower = user).values('followee')
+            post = Post.objects.filter(author__in = follow).order_by('-id')
+            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            return response.JsonResponse(serializer.data, safe=False)
         else :
             return response.JsonResponse({"status":"request error"})

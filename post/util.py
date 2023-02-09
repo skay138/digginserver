@@ -7,8 +7,6 @@ def get_youtube_info(req):
         return 
 
     raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={video_id}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
-    print(raw_video_data)
-    print('----------------------------------------------')
     video_data = raw_video_data['items'][0]['snippet']
     
     title = video_data['title']

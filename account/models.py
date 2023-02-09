@@ -142,4 +142,4 @@ class Follow(models.Model):
         )
 
     def following(self):
-        return f'{self.follower.nickname} is following {self.followee.nickname}'
+        return f'{self.follower.uid} is following {self.followee.uid}'
