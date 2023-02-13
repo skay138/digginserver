@@ -178,19 +178,26 @@ class FollowView(APIView):
 
     @swagger_auto_schema(tags=['account/follow'], manual_parameters=[follower, followee])
     def get(self, request):
-        if request.GET.get('follower', default = None) != None:
+        if request.GET.get('follower', default = None) != None and request.GET.get('followee') == None:
             key = request.GET.get('follower', default = None)
             follower = Follow.objects.filter(followee = key)
             serializer = FollowerSerializer(follower, many=True)
             return response.JsonResponse(serializer.data, safe=False)
             
-        elif request.GET.get('followee', default = None) != None:
+        elif request.GET.get('followee', default = None) != None and request.GET.get('follower') == None:
             key = request.GET.get('followee', default = None)
             followee = Follow.objects.filter(follower = key)
             serializer = FolloweeSerializer(followee, many=True)
             return response.JsonResponse(serializer.data, safe=False)
         else:
-            return response.JsonResponse({"status": "bad request"})
+            key_followee = request.GET.get('followee', default = None)
+            key_follower = request.GET.get('follower', default = None)
+            try: 
+                Follow.objects.get(follower = key_follower, followee=key_followee)
+                return response.JsonResponse({"status":"true"})
+            except:
+                return response.JsonResponse({"status":"false"})
+
 
 
     @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer)      
