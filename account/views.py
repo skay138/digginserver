@@ -157,6 +157,20 @@ class AccountView(APIView):
             return response.JsonResponse({"status" : "user not found"})
 
 
+class AccountSearchView(APIView):
+    nickname = openapi.Parameter('nickname', openapi.IN_QUERY, type=openapi.TYPE_STRING, default='test')
+    
+    @swagger_auto_schema(manual_parameters=[nickname], operation_description='GET USER INFO')
+    def get(self, request):
+        search_nickname = request.GET.get('nickname')
+        if request.user.is_authenticated:
+            search_result = User.objects.filter(nickname__contains = search_nickname)
+            print(search_result)
+            serializer = UserSerializer(search_result, many=True)
+            return response.JsonResponse(serializer.data, status=200, safe=False)
+        else:
+            return response.JsonResponse({"status":"not user"})
+
 
 class FollowView(APIView):
     follower = openapi.Parameter('follower', openapi.IN_QUERY, type=openapi.TYPE_STRING, description="UID's follower", default=2)
