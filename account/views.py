@@ -164,7 +164,6 @@ class AccountSearchView(APIView):
     def get(self, request):
         search_nickname = request.GET.get('nickname')
         search_result = User.objects.filter(nickname__contains = search_nickname)
-        print(search_result)
         serializer = UserSerializer(search_result, many=True)
         return response.JsonResponse(serializer.data, status=200, safe=False)
 
@@ -178,14 +177,16 @@ class FollowView(APIView):
     def get(self, request):
         if request.GET.get('follower', default = None) != None and request.GET.get('followee') == None:
             key = request.GET.get('follower', default = None)
-            follower = Follow.objects.filter(followee = key)
-            serializer = FollowerSerializer(follower, many=True)
+            follower = Follow.objects.filter(followee = key).values('follower')
+            users = User.objects.filter(uid__in = follower)
+            serializer = UserSerializer(users, many=True)
             return response.JsonResponse(serializer.data, safe=False)
             
         elif request.GET.get('followee', default = None) != None and request.GET.get('follower') == None:
             key = request.GET.get('followee', default = None)
-            followee = Follow.objects.filter(follower = key)
-            serializer = FolloweeSerializer(followee, many=True)
+            followee = Follow.objects.filter(follower = key).values('followee')
+            users = User.objects.filter(uid__in = followee)
+            serializer = UserSerializer(users, many=True)
             return response.JsonResponse(serializer.data, safe=False)
         else:
             key_followee = request.GET.get('followee', default = None)
