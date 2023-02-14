@@ -55,7 +55,7 @@ class PostView(APIView):
             )
             for keys in request.data:
                 if hasattr(post, keys) == True:
-                    if hasattr(post, "youtube_link"):
+                    if keys == 'youtube_link':
                         pass
                     else:
                         setattr(post, keys, request.data[keys])
