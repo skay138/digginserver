@@ -51,11 +51,14 @@ class PostView(APIView):
             user = User.objects.get(uid=data_user)
             post = Post.objects.create(
                 author = user,
-                youtube_link = data_youtube_link
+                youtube_link = data_youtube_link.split('&')[0]
             )
             for keys in request.data:
                 if hasattr(post, keys) == True:
-                    setattr(post, keys, request.data[keys])
+                    if hasattr(post, "youtube_link"):
+                        pass
+                    else:
+                        setattr(post, keys, request.data[keys])
             post.save()            
             return response.JsonResponse({"status": "good"})
         else:

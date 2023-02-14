@@ -71,15 +71,13 @@ class AccountView(APIView):
     @swagger_auto_schema(manual_parameters=[uid], operation_description='GET USER INFO')
     def get(self, request):
         key = request.GET.get('uid')
-        if request.user.is_authenticated:
-            if User.objects.filter(uid = key):
-                user = User.objects.get(uid = key)
-                serializer = UserSerializer(user)
-                return response.JsonResponse(serializer.data, status=200)
-            else:
-                return response.JsonResponse({"status" : "user not found"})
+        if User.objects.filter(uid = key):
+            user = User.objects.get(uid = key)
+            serializer = UserSerializer(user)
+            return response.JsonResponse(serializer.data, status=200)
         else:
-            return response.JsonResponse({"status":"not user"})
+            return response.JsonResponse({"status" : "user not found"})
+
 
 
     @swagger_auto_schema(request_body=UserSerializer, operation_description="ONLY ADD UID '7707'")
