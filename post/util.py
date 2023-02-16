@@ -1,9 +1,13 @@
 import requests
 
 def get_youtube_info(req):
+    try :
+        raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+        video_data = raw_video_data['items'][0]['snippet']
+    except IndexError:
+        raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id=528yECWgtVg&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+        video_data = raw_video_data['items'][0]['snippet']
 
-    raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
-    video_data = raw_video_data['items'][0]['snippet']
 
     title = video_data['title']
     description = video_data['description']
@@ -29,7 +33,7 @@ def get_youtube_link(req):
             raw_video_data['items'][0]['snippet']
             return youtube_link
         except IndexError:
-            return '528yECWgtVg'
+            return 
     
     elif "youtu.be/" in req:
         youtube_link = req.split('be/')[1]
@@ -38,7 +42,12 @@ def get_youtube_link(req):
             raw_video_data['items'][0]['snippet']
             return youtube_link
         except IndexError:
-            return '528yECWgtVg'
+            return 
     
     else:
-        return '528yECWgtVg'
+        try : 
+            raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+            raw_video_data['items'][0]['snippet']
+            return req
+        except IndexError:
+            return 

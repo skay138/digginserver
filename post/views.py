@@ -45,18 +45,22 @@ class PostView(APIView):
         data_youtube_link = request.data.get('youtube_link')
         if User.objects.filter(uid=data_user):
             user = User.objects.get(uid=data_user)
-            post = Post.objects.create(
-                author = user,
-                youtube_link = get_youtube_link(data_youtube_link)
-            )
-            for keys in request.data:
-                if hasattr(post, keys) == True:
-                    if keys == 'youtube_link':
-                        pass
-                    else:
-                        setattr(post, keys, request.data[keys])
-            post.save()            
-            return response.JsonResponse({"status": "good"})
+            youtube_link = get_youtube_link(data_youtube_link)
+            if youtube_link != None:
+                post = Post.objects.create(
+                    author = user,
+                    youtube_link = youtube_link
+                )
+                for keys in request.data:
+                    if hasattr(post, keys) == True:
+                        if keys == 'youtube_link':
+                            pass
+                        else:
+                            setattr(post, keys, request.data[keys])
+                post.save()            
+                return response.JsonResponse({"status": "good"})
+            else:
+                return response.JsonResponse({"status":"link error"}, status=400)
         else:
             return response.JsonResponse({"status": 'user not found'})
 
@@ -76,16 +80,18 @@ class PostDetailView(APIView):
     @swagger_auto_schema(tags=['PostDetail'], request_body=PostSwaggerSerializer)
     def put(self, request, post_id):
         data_user = request.data.get('uid')
-        youtube_link = request.data.get('youtube_link')
+        data_youtube_link = request.data.get('youtube_link')
+        varifyed_youtube_link = get_youtube_link(data_youtube_link)
         post = Post.objects.get(id=post_id)
-        if get_youtube_link(youtube_link):
-            pass
-        else :
-            return response.JsonResponse({"status":"youtube_link_error"})
+        if varifyed_youtube_link == None:
+            return response.JsonResponse({"status":"link error"}, status=400)
         if post.author.uid == data_user:
             for keys in request.data:
                 if hasattr(post, keys) == True:
-                    setattr(post, keys, request.data[keys])
+                    if keys == 'youtube_link':
+                        post.youtube_link = varifyed_youtube_link
+                    else:
+                        setattr(post, keys, request.data[keys])
             post.save()
             return response.JsonResponse({"status": "good"})
         else:
