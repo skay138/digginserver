@@ -26,7 +26,10 @@ class PostView(APIView):
     @swagger_auto_schema(manual_parameters=[number, page],operation_description="")
     def get(self, request):
         user_header = request.META.get('HTTP_AUTHORIZATION')
-        current_user = User.objects.get(uid = user_header)
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
         number = int(request.GET.get('number', default=3))
         page = int(request.GET.get('page', default=1))
         post = Post.objects.latest('id')
@@ -73,13 +76,17 @@ class PostView(APIView):
 class PostDetailView(APIView):
     @swagger_auto_schema(tags=['PostDetail'])
     def get(self, request, post_id):
-        if request.method == 'GET':
-            if Post.objects.filter(id=post_id):
-                post = Post.objects.get(id=post_id)
-                serializer = PostSerializer(post, context={'author': request.user})
-                return response.JsonResponse(serializer.data, status=200)
-            else:
-                return response.JsonResponse({"status" : "post not found"})
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
+        if Post.objects.filter(id=post_id):
+            post = Post.objects.get(id=post_id)
+            serializer = PostSerializer(post, context={'author': current_user})
+            return response.JsonResponse(serializer.data, status=200)
+        else:
+            return response.JsonResponse({"status" : "post not found"})
 
     @swagger_auto_schema(tags=['PostDetail'], request_body=PostSwaggerSerializer)
     def put(self, request, post_id):
@@ -127,22 +134,28 @@ class PostSearchView(APIView):
 
     @swagger_auto_schema(manual_parameters=[title, author, recommended], operation_description="USE ONLY ONE PARAMETER")
     def get(self, request):
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
+
         if request.GET.get('title', default = None) != None :
             key = request.GET.get('title', default = None)
             post=Post.objects.filter(title__contains = key).order_by('-id')
-            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            serializer = PostSerializer(post, context={'author': current_user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
         elif request.GET.get('author', default = None) != None :
             key = request.GET.get('author', default = None)
             user = User.objects.filter(nickname__contains = key)
             post=Post.objects.filter(author__in = user).order_by('-id')
-            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            serializer = PostSerializer(post, context={'author': current_user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
         elif request.GET.get('recommended', default = None) != None :
             key = request.GET.get('recommended', default = None)
             one_week = timezone.now() - timedelta(weeks=1)
             post=Post.objects.filter(date__gt = one_week).order_by('-like_count','-id')[:int(key)]
-            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            serializer = PostSerializer(post, context={'author': current_user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
 
         else:
@@ -153,12 +166,17 @@ class MyPostView(APIView):
     uid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, default=2)
     @swagger_auto_schema(manual_parameters=[uid])
     def get(self, request):
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
         if request.GET.get('uid', default = None) != None :
             key = request.GET.get('uid')
             try : 
                 author = User.objects.get(uid = key)
                 post = Post.objects.filter(author = author).order_by('-id')
-                serializer = PostSerializer(post, context={'author': request.user}, many=True)
+                serializer = PostSerializer(post, context={'author': current_user}, many=True)
                 return response.JsonResponse(serializer.data, safe=False)
             except:
                 return response.JsonResponse({"status":"user not found"})
@@ -169,6 +187,11 @@ class MyFeedView(APIView):
     uid = openapi.Parameter('uid', openapi.IN_QUERY, type=openapi.TYPE_STRING, default=2)
     @swagger_auto_schema(manual_parameters=[uid])
     def get(self, request):
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
         if request.GET.get('uid', default = None) != None :
             key = request.GET.get('uid')
             try : 
@@ -177,7 +200,7 @@ class MyFeedView(APIView):
                 return response.JsonResponse({"status":"user not found"})
             follow = Follow.objects.filter(follower = user).values('followee')
             post = Post.objects.filter(author__in = follow).order_by('-id')
-            serializer = PostSerializer(post, context={'author': request.user}, many=True)
+            serializer = PostSerializer(post, context={'author': current_user}, many=True)
             return response.JsonResponse(serializer.data, safe=False)
         else :
             return response.JsonResponse({"status":"request error"})
