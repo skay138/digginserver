@@ -4,7 +4,6 @@ User = get_user_model()
 
 from .models import Post
 from tag_like.models import PostLike
-from .util import get_youtube_info
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -12,8 +11,7 @@ class PostSerializer(serializers.ModelSerializer):
         return obj.author.nickname
     def get_author_uid(self, obj):
         return obj.author.uid
-    def get_video_data(self, obj):
-        return get_youtube_info(obj.youtube_link)
+
 
 
     def get_user_like(self, obj):
@@ -41,13 +39,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     nickname = serializers.SerializerMethodField('get_author_nickname')
     uid = serializers.SerializerMethodField('get_author_uid')
-    youtube_data = serializers.SerializerMethodField('get_video_data')
     parent = serializers.SerializerMethodField('get_parent_author')
     userlike = serializers.SerializerMethodField('get_user_like')
 
     class Meta :
         model = Post
-        fields = ['id', 'title', 'content', 'youtube_link', 'nickname', 'uid', 'like_count', 'userlike', 'youtube_data','date', 'parent']
+        fields = ['id', 'title', 'content', 'youtube_link', 'youtube_title', 'youtube_thumb', 'nickname', 'uid', 'like_count', 'userlike','date', 'parent']
 
 class PostSwaggerSerializer(serializers.Serializer):
     uid= serializers.CharField(help_text='작성자 uid', default=2)

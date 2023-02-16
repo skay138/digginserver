@@ -8,7 +8,7 @@ from rest_framework import serializers
 
 class PostsAdmin(admin.ModelAdmin):
     
-    list_display = ('id', 'title', 'content', 'author', 'youtube_link', 'like_count')
+    list_display = ('id', 'title', 'content', 'author', 'youtube_link', 'youtube_title', 'like_count')
     list_display_links=('title',)
 
 

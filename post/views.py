@@ -45,15 +45,18 @@ class PostView(APIView):
         data_youtube_link = request.data.get('youtube_link')
         if User.objects.filter(uid=data_user):
             user = User.objects.get(uid=data_user)
-            youtube_link = get_youtube_link(data_youtube_link)
+            youtube_link, youtube_title, youtube_thumb = get_youtube_link(data_youtube_link)
+            print(youtube_title)
             if youtube_link != None:
                 post = Post.objects.create(
                     author = user,
-                    youtube_link = youtube_link
+                    youtube_link = youtube_link,
+                    youtube_title = youtube_title,
+                    youtube_thumb = youtube_thumb
                 )
                 for keys in request.data:
                     if hasattr(post, keys) == True:
-                        if keys == 'youtube_link':
+                        if 'youtube_' in keys:
                             pass
                         else:
                             setattr(post, keys, request.data[keys])
@@ -81,7 +84,7 @@ class PostDetailView(APIView):
     def put(self, request, post_id):
         data_user = request.data.get('uid')
         data_youtube_link = request.data.get('youtube_link')
-        varifyed_youtube_link = get_youtube_link(data_youtube_link)
+        varifyed_youtube_link, varifyed_youtube_title, varifyed_youtube_thumb = get_youtube_link(data_youtube_link)
         post = Post.objects.get(id=post_id)
         if varifyed_youtube_link == None:
             return response.JsonResponse({"status":"link error"}, status=400)
@@ -90,6 +93,10 @@ class PostDetailView(APIView):
                 if hasattr(post, keys) == True:
                     if keys == 'youtube_link':
                         post.youtube_link = varifyed_youtube_link
+                    elif keys == 'youtube_title':
+                        post.youtube_title = varifyed_youtube_title
+                    elif keys == 'youtube_thumb':
+                        post.youtube_thumb = varifyed_youtube_thumb
                     else:
                         setattr(post, keys, request.data[keys])
             post.save()

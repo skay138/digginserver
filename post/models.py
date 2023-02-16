@@ -23,6 +23,12 @@ class Post(models.Model):
     youtube_link = models.TextField(
         null=False
     )
+    youtube_title = models.TextField(
+        null=False
+    )
+    youtube_thumb = models.TextField(
+        null=False
+    )
     like_count = models.IntegerField(
         default=0
     )
