@@ -16,11 +16,12 @@ class PostSerializer(serializers.ModelSerializer):
 
     def get_user_like(self, obj):
         author = self.context['author']
+        print(author)
         try :
             PostLike.objects.get(post = obj.id, user = author)
-            return 1
+            return True
         except :
-            return 0
+            return False
 
 
     def get_parent_author(self, obj):

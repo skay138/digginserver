@@ -22,9 +22,11 @@ class PostView(APIView):
     number = openapi.Parameter('number', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, default=3)
     page = openapi.Parameter('page', openapi.IN_QUERY, type=openapi.TYPE_NUMBER, default=1)
 
+
     @swagger_auto_schema(manual_parameters=[number, page],operation_description="")
     def get(self, request):
-
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        current_user = User.objects.get(uid = user_header)
         number = int(request.GET.get('number', default=3))
         page = int(request.GET.get('page', default=1))
         post = Post.objects.latest('id')
@@ -35,7 +37,7 @@ class PostView(APIView):
             if Post.objects.filter(id = i) and collected_post!= number:
                 post_array.append(Post.objects.get(id = i))
                 collected_post += 1
-        serializer = PostSerializer(post_array, context={'author': request.user}, many=True)
+        serializer = PostSerializer(post_array, context={'author': current_user}, many=True)
 
         return response.JsonResponse(serializer.data, safe=False)
 
@@ -46,7 +48,6 @@ class PostView(APIView):
         if User.objects.filter(uid=data_user):
             user = User.objects.get(uid=data_user)
             youtube_link, youtube_title, youtube_thumb = get_youtube_link(data_youtube_link)
-            print(youtube_title)
             if youtube_link != None:
                 post = Post.objects.create(
                     author = user,
