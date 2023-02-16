@@ -1,10 +1,16 @@
 import requests
 
 def get_youtube_info(req):
-    try :
-        video_id = req.split('v=')[1]
-    except :
-        return 
+    if ('watch' in req):
+        try :
+            video_id = req.split('v=')[1]
+        except :
+            return
+    else:
+        try :
+            video_id = req.split('be/')[1]
+        except :
+            return
 
     raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={video_id}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
     video_data = raw_video_data['items'][0]['snippet']
