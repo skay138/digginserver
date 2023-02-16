@@ -2,8 +2,12 @@ import requests
 
 def get_youtube_info(req):
 
-    raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
-    video_data = raw_video_data['items'][0]['snippet']
+    try :
+        raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+        video_data = raw_video_data['items'][0]['snippet']
+    except IndexError:
+        raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id=528yECWgtVg&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+        video_data = raw_video_data['items'][0]['snippet']
     
     title = video_data['title']
     description = video_data['description']
