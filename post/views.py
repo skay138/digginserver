@@ -11,7 +11,7 @@ from .models import Post
 from django.contrib.auth import get_user_model
 User = get_user_model()
 from account.models import Follow
-from .util import youtube_link_varify
+from .util import get_youtube_link
 
 from django.utils import timezone
 from datetime import timedelta
@@ -43,15 +43,11 @@ class PostView(APIView):
     def post(self, request):
         data_user = request.data.get('uid')
         data_youtube_link = request.data.get('youtube_link')
-        if youtube_link_varify(data_youtube_link):
-            pass
-        else :
-            return response.JsonResponse({"status":"youtube_link_error"})
         if User.objects.filter(uid=data_user):
             user = User.objects.get(uid=data_user)
             post = Post.objects.create(
                 author = user,
-                youtube_link = data_youtube_link.split('&')[0]
+                youtube_link = get_youtube_link(data_youtube_link)
             )
             for keys in request.data:
                 if hasattr(post, keys) == True:
@@ -82,7 +78,7 @@ class PostDetailView(APIView):
         data_user = request.data.get('uid')
         youtube_link = request.data.get('youtube_link')
         post = Post.objects.get(id=post_id)
-        if youtube_link_varify(youtube_link):
+        if get_youtube_link(youtube_link):
             pass
         else :
             return response.JsonResponse({"status":"youtube_link_error"})

@@ -1,18 +1,8 @@
 import requests
 
 def get_youtube_info(req):
-    if ('watch' in req):
-        try :
-            video_id = req.split('v=')[1]
-        except :
-            return
-    else:
-        try :
-            video_id = req.split('be/')[1]
-        except :
-            return
 
-    raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={video_id}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
+    raw_video_data = requests.get(f"https://www.googleapis.com/youtube/v3/videos?id={req}&key=AIzaSyAN5CLX1zBoI5sywWcZPHPPh9EIy-WkICA&part=snippet").json()
     video_data = raw_video_data['items'][0]['snippet']
     
     title = video_data['title']
@@ -29,10 +19,15 @@ def get_youtube_info(req):
 
     return data
 
-def youtube_link_varify(req):
+def get_youtube_link(req):
     if "youtube.com/watch?v=" in req:
-        return True
+        youtube_link = req.split('&')[0]
+        youtube_link = youtube_link.split('v=')[1]
+        
+        return youtube_link
+    
     elif "youtu.be/" in req:
-        return True
+        return req.split('be/')[1]
+    
     else:
-        return False
+        return '528yECWgtVg'
