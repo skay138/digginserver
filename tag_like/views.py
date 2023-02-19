@@ -10,7 +10,7 @@ from post.models import Post
 from .models import PostLike
 from django.contrib.auth import get_user_model
 User = get_user_model()
-
+from drf_yasg             import openapi 
 from rest_framework import serializers
 
 # Create your views here.
@@ -21,6 +21,28 @@ class PostLikeSwaggerView(serializers.Serializer):
 
 
 class PostLikeView(APIView):
+    post_id = openapi.Parameter('post_id', openapi.IN_QUERY, type=openapi.TYPE_NUMBER)
+
+    @swagger_auto_schema(manual_parameters=[post_id])
+    def get(self, request):
+        user_header = request.META.get('HTTP_AUTHORIZATION')
+        try :
+            current_user = User.objects.get(uid = user_header)
+        except:
+            current_user = request.user
+        post_id = request.GET.get('post_id')
+        try :
+            post = Post.objects.get(id = post_id)
+            like_count = PostLike.objects.filter(post = post).count()
+        except:
+            return response.JsonResponse({'status':'post not found'}, status = 300)
+
+        try : 
+            PostLike.objects.get(user = current_user, post = post)
+            return response.JsonResponse({"status":True, "count": like_count}, status = 200)
+        except:
+            return response.JsonResponse({"status":False, "count":like_count}, status = 201)
+
 
     @swagger_auto_schema(request_body=PostLikeSwaggerView)
     def post(self, request):

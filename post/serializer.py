@@ -12,18 +12,6 @@ class PostSerializer(serializers.ModelSerializer):
     def get_author_uid(self, obj):
         return obj.author.uid
 
-
-
-    def get_user_like(self, obj):
-        author = self.context['author']
-        print(author)
-        try :
-            PostLike.objects.get(post = obj.id, user = author)
-            return True
-        except :
-            return False
-
-
     def get_parent_author(self, obj):
         if obj.parent_id:
             post_parent_id = obj.parent_id
@@ -41,11 +29,11 @@ class PostSerializer(serializers.ModelSerializer):
     nickname = serializers.SerializerMethodField('get_author_nickname')
     uid = serializers.SerializerMethodField('get_author_uid')
     parent = serializers.SerializerMethodField('get_parent_author')
-    userlike = serializers.SerializerMethodField('get_user_like')
+
 
     class Meta :
         model = Post
-        fields = ['id', 'title', 'content', 'youtube_link', 'youtube_title', 'youtube_thumb', 'nickname', 'uid', 'like_count', 'userlike','date', 'parent']
+        fields = ['id', 'title', 'content', 'youtube_link', 'youtube_title', 'youtube_thumb', 'nickname', 'uid','date', 'parent']
 
 class PostSwaggerSerializer(serializers.Serializer):
     uid= serializers.CharField(help_text='작성자 uid', default=2)
