@@ -208,15 +208,13 @@ class FollowView(APIView):
 
         try: 
             follow = Follow.objects.get(follower = data_follower, followee=data_followee)
-            serializer = FollowCountSerializer(follow)
-            return response.JsonResponse(serializer.data, status = 201)
+            return response.JsonResponse({'status':"already follow"}, status = 201)
         except :
             follow = Follow.objects.create(
                 follower = data_follower,
                 followee = data_followee
             )
-            serializer = FollowCountSerializer(follow)
-            return response.JsonResponse(serializer.data, status= 200)
+            return response.JsonResponse({"status":"good"}, status= 200)
 
     @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer) 
     def delete(self, request):
@@ -228,8 +226,7 @@ class FollowView(APIView):
 
         if Follow.objects.filter(follower = data_follower, followee=data_followee):
             follow = Follow.objects.get(follower = data_follower, followee=data_followee)
-            serializer = FollowCountDelSerializer(follow)
             follow.delete()
-            return response.JsonResponse(serializer.data, status=200)
+            return response.JsonResponse({"status":"good"}, status=200)
         else:
-            return response.JsonResponse({"status" : "already unfollowed"}, status=400)   
+            return response.JsonResponse({"status" : "already unfollowed"}, status=200)   
