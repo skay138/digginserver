@@ -40,6 +40,78 @@ class SwaggerDeleteSerializer(serializers.ModelSerializer):
 
 
 
+class FollowCountSerializer(serializers.ModelSerializer):
+    def getFollowerFollower(self, obj):
+        user = obj.follower
+        follwer = Follow.objects.filter(followee = user).count()
+        
+        return follwer
+    
+    def getFollowerFollowee(self, obj):
+        user = obj.follower
+        followee = Follow.objects.filter(follower = user).count()
+        return followee
+
+
+    def getFolloweeFollower(self, obj):
+        user = obj.followee
+        follower = Follow.objects.filter(followee = user).count()
+        
+        return follower
+    
+    def getFolloweeFollowee(self, obj):
+        user = obj.followee
+        followee = Follow.objects.filter(follower = user).count()
+
+        return followee
+    
+    follower_follower = serializers.SerializerMethodField('getFollowerFollower')
+    follower_followee = serializers.SerializerMethodField('getFollowerFollowee')
+    followee_follower = serializers.SerializerMethodField('getFolloweeFollower')
+    followee_followee = serializers.SerializerMethodField('getFolloweeFollowee')
+
+    class Meta:
+        model = Follow
+        fields = ['follower_follower', 'follower_followee','followee_follower','followee_followee']
+
+
+class FollowCountDelSerializer(serializers.ModelSerializer):
+    def getFollowerFollower(self, obj):
+        user = obj.follower
+        follwer = Follow.objects.filter(followee = user).count()
+        
+        return follwer
+    
+    def getFollowerFollowee(self, obj):
+        user = obj.follower
+        followee = Follow.objects.filter(follower = user).count()
+        return followee
+
+
+    def getFolloweeFollower(self, obj):
+        user = obj.followee
+        follower = Follow.objects.filter(followee = user).count()
+        
+        return follower
+    
+    def getFolloweeFollowee(self, obj):
+        user = obj.followee
+        followee = Follow.objects.filter(follower = user).count()
+
+        return followee
+    
+    follower_follower = serializers.SerializerMethodField('getFollowerFollower')
+    follower_followee = serializers.SerializerMethodField('getFollowerFollowee')
+    followee_follower = serializers.SerializerMethodField('getFolloweeFollower')
+    followee_followee = serializers.SerializerMethodField('getFolloweeFollowee')
+
+    class Meta:
+        model = Follow
+        fields = ['follower_follower', 'follower_followee','followee_follower','followee_followee']
+
+
+
+
 class FollowerSerializer(serializers.ModelSerializer):
     def get_nickname(self, obj):
         return obj.follower.nickname

@@ -15,14 +15,15 @@ from firebase_admin import credentials
 import firebase_admin
 
 firebase_creds=credentials.Certificate(settings.FIREBASE_CONFIG)
-firebase_admin.initialize_app(firebase_creds)
+try : firebase_admin.initialize_app(firebase_creds)
+except : pass
 
 
 
 
 from .util import OverwriteStorage, image_upload, logged, bgimage_upload
 from account.models import User, Follow
-from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowerSerializer, FolloweeSerializer, FollowSerializer
+from .serializer import UserSerializer, SwaggerDeleteSerializer, FollowSerializer, FollowCountSerializer, FollowCountDelSerializer
 
 
 
@@ -203,16 +204,19 @@ class FollowView(APIView):
             data_follower = User.objects.get(uid = request.data.get('follower'))
             data_followee = User.objects.get(uid = request.data.get('followee'))
         except :
-            return response.JsonResponse({"status" : "follow user not found"})
+            return response.JsonResponse({"status" : "follow user not found"}, status=400)
 
-        if Follow.objects.filter(follower = data_follower, followee=data_followee):
-            return response.JsonResponse({"status":"already following"})
-        else:
-            Follow.objects.create(
+        try: 
+            follow = Follow.objects.get(follower = data_follower, followee=data_followee)
+            serializer = FollowCountSerializer(follow)
+            return response.JsonResponse(serializer.data, status = 201)
+        except :
+            follow = Follow.objects.create(
                 follower = data_follower,
                 followee = data_followee
             )
-            return response.JsonResponse({"status":"done"})
+            serializer = FollowCountSerializer(follow)
+            return response.JsonResponse(serializer.data, status= 200)
 
     @swagger_auto_schema(tags=['account/follow'], request_body=FollowSerializer) 
     def delete(self, request):
@@ -220,10 +224,12 @@ class FollowView(APIView):
             data_follower = User.objects.get(uid = request.data.get('follower'))
             data_followee = User.objects.get(uid = request.data.get('followee'))
         except :
-            return response.JsonResponse({"status" : "follow user not found"})
+            return response.JsonResponse({"status" : "follow user not found"}, status=400)
 
         if Follow.objects.filter(follower = data_follower, followee=data_followee):
-            Follow.objects.get(follower = data_follower, followee=data_followee).delete()
-            return response.JsonResponse({"status":"unfollow done"})
+            follow = Follow.objects.get(follower = data_follower, followee=data_followee)
+            serializer = FollowCountDelSerializer(follow)
+            follow.delete()
+            return response.JsonResponse(serializer.data, status=200)
         else:
-            return response.JsonResponse({"status" : "already unfollowed"})   
+            return response.JsonResponse({"status" : "already unfollowed"}, status=400)   
